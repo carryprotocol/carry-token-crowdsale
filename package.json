@@ -1,0 +1,27 @@
+{
+  "name": "carry-token-crowdsale",
+  "version": "1.0.0",
+  "description": "Carry token crowdsale",
+  "homepage": "https://carryprotocol.io/",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "carry",
+    "token",
+    "crowdsale"
+  ],
+  "author": "Carry team (https://carryprotocol.io/)",
+  "contributors": [
+    "Hong Minhee <hong@carryprotocol.io> (https://hongminhee.org/)"
+  ],
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "truffle": "^4.1.7"
+  },
+  "private": true
+}
