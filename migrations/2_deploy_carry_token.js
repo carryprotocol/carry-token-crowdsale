@@ -13,29 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity ^0.4.23;
+var CarryToken = artifacts.require("CarryToken");
 
-contract Migrations {
-    address public owner;
-    uint public last_completed_migration;
-
-    modifier restricted() {
-        if (msg.sender == owner) _;
-    }
-
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function Migrations() public {
-        owner = msg.sender;
-    }
-
-    function setCompleted(uint completed) public restricted {
-        last_completed_migration = completed;
-    }
-
-    function upgrade(address new_address) public restricted {
-        Migrations upgraded = Migrations(new_address);
-        upgraded.setCompleted(last_completed_migration);
-    }
-}
+module.exports = function(deployer) {
+  deployer.deploy(CarryToken);
+};

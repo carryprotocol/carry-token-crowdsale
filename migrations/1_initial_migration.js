@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-var Migrations = artifacts.require("./Migrations.sol");
+const Migrations = artifacts.require("./Migrations.sol");
 
-module.exports = function(deployer) {
-  deployer.deploy(Migrations);
+module.exports = (deployer) => {
+    return deployer.deploy(Migrations);
 };

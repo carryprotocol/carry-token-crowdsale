@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test && solium -d contracts && solium -d test"
   },
   "keywords": [
     "carry",
@@ -21,6 +21,8 @@
   ],
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "openzeppelin-solidity": "1.9.0",
+    "solium": "^1.1.6",
     "truffle": "^4.1.7"
   },
   "private": true
