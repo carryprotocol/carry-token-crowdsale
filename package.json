@@ -21,6 +21,7 @@
   ],
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "deasync": "^0.1.12",
     "openzeppelin-solidity": "1.9.0",
     "solium": "^1.1.6",
     "truffle": "^4.1.7"

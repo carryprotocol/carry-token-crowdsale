@@ -7,12 +7,21 @@ using blockchain.
 Carry the token, which has the ticker symbol **CRE**, is an ERC20-compliant
 capped token.
 
-This repository contains `CarryToken` contract which declares the **CRE** tokken
-based on [OpenZeppelin]'s [`CappedToken`][CappedToken] contract.
+This repository contains:
+
+- `CarryToken` contract which declares the **CRE** token based on
+  [OpenZeppelin]'s [`CappedToken`][CappedToken] contract, and
+
+- `CarryTokenCrowdsale` which declares the token crowdsale contract,
+  which is based on [OpenZeppelin]'s [`CappedCrowdsale`][CappedCrowdsale] &
+  [WhitelistedCrowdsale][] contracts, to be used for the Carry token presale &
+  public sale.
 
 [Carry]: https://carryprotocol.io/
 [OpenZeppelin]: https://openzeppelin.org/
 [CappedToken]: https://openzeppelin.org/api/docs/token_ERC20_CappedToken.html
+[CappedCrowdsale]: https://openzeppelin.org/api/docs/crowdsale_validation_CappedCrowdsale.html
+[WhitelistedCrowdsale]: https://openzeppelin.org/api/docs/crowdsale_validation_WhitelistedCrowdsale.html
 
 
 Build
@@ -34,15 +43,21 @@ The following command compiles every contract in the repository:
 
     truffle compile
 
+[Truffle]: http://truffleframework.com/
+
+
+Test
+----
+
 The followoing command runs the whole test suite against every contract:
 
     npm test
 
-[Truffle]: http://truffleframework.com/
-
 
 License
 -------
+
+Copyright © 2018 Carry Protocol.
 
 Every source code in this repository is distributed under [GPLv3] or higher.
 
