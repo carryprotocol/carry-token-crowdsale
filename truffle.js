@@ -18,19 +18,47 @@
 // to customize your Truffle configuration!
 const deasync = require("deasync");
 const http = require("http");
+const HDWalletProvider = require("truffle-hdwallet-provider");
 
 const networks = {};
 const networkCandidates = {
+    // ganache (local testnet)
     development: {
         host: "127.0.0.1",
         port: 7545,
         network_id: "*",
+    },
+
+    // ropsten (public testnet)
+    demo: {
+        provider: () => {
+            const mnemonic = process.env.MNEMONIC;
+            const accessToken = process.env.ACCESS_TOKEN;
+            if (typeof mnemonic === "undefined") {
+                throw new Error("Missing environment variable: MNEMONIC");
+            } else if (typeof accessToken === "undefined") {
+                throw new Error(
+                    "Missing environment variable: ACCESS_TOKEN\n" +
+                    "e.g., XYZ from https://ropsten.infura.io/XYZ"
+                );
+            }
+            return new HDWalletProvider(
+                mnemonic,
+                "https://ropsten.infura.io/" + accessToken
+            );
+        },
+        gas: 2900000,
+        network_id: 3
     },
 };
 
 // Insert only currently available networks into the configuration.
 let _loaded = {};
 for (let network of Object.entries(networkCandidates)) {
+    if (network[1].provider) {
+        networks[network[0]] = network[1];
+        continue;
+    }
     _loaded[network[0]] = false;
     let request = http.request(
         {
@@ -63,4 +91,10 @@ deasync.loopWhile(() => Object.values(_loaded).some((l) => !l));
 
 module.exports = {
     networks: networks,
+    solc: {
+        optimizer: {
+            enabled: true,
+            runs: 200,
+        },
+    },
 };
