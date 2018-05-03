@@ -34,9 +34,9 @@ const networkCandidates = {
         provider: () => {
             const mnemonic = process.env.MNEMONIC;
             const accessToken = process.env.ACCESS_TOKEN;
-            if (typeof mnemonic === "undefined") {
+            if (mnemonic == null) {
                 throw new Error("Missing environment variable: MNEMONIC");
-            } else if (typeof accessToken === "undefined") {
+            } else if (accessToken == null) {
                 throw new Error(
                     "Missing environment variable: ACCESS_TOKEN\n" +
                     "e.g., XYZ from https://ropsten.infura.io/XYZ"
