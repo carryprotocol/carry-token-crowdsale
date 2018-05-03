@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test && npm run lint",
+    "lint": "solium -d contracts && eslint test/ truffle.js"
   },
   "keywords": [
     "carry",
@@ -21,7 +22,12 @@
   ],
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "truffle": "^4.1.7"
+    "deasync": "^0.1.12",
+    "eslint": "^4.19.1",
+    "openzeppelin-solidity": "1.9.0",
+    "solium": "^1.1.6",
+    "truffle": "^4.1.7",
+    "truffle-hdwallet-provider": "0.0.3"
   },
   "private": true
 }
