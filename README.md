@@ -1,6 +1,8 @@
 Carry token crowdsale
 =====================
 
+[![Build Status][ci-image]][ci]
+
 [Carry] the protocol is a platform that connects offline merchants and consumers
 using blockchain.
 
@@ -17,6 +19,8 @@ This repository contains:
   [WhitelistedCrowdsale][] contracts, to be used for the Carry token presale &
   public sale.
 
+[ci-image]: https://travis-ci.org/carryprotocol/carry-token-crowdsale.svg?branch=master
+[ci]: https://travis-ci.org/carryprotocol/carry-token-crowdsale
 [Carry]: https://carryprotocol.io/
 [OpenZeppelin]: https://openzeppelin.org/
 [CappedToken]: https://openzeppelin.org/api/docs/token_ERC20_CappedToken.html
