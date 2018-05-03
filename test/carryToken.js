@@ -17,7 +17,7 @@ const { assertEq, assertFail } = require("./utils");
 
 const CarryToken = artifacts.require("CarryToken");
 
-contract('CarryToken', ([sender, receiver]) => {
+contract("CarryToken", ([sender, receiver]) => {
     let instance;
     let decimals;
 

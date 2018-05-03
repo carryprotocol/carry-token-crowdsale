@@ -32,8 +32,10 @@ const networkCandidates = {
     // ropsten (public testnet)
     demo: {
         provider: () => {
-            const mnemonic = process.env.MNEMONIC;
-            const accessToken = process.env.ACCESS_TOKEN;
+            const {
+                MNEMONIC: mnemonic,
+                ACCESS_TOKEN: accessToken,
+            } = process.env;
             if (mnemonic == null) {
                 throw new Error("Missing environment variable: MNEMONIC");
             } else if (accessToken == null) {
@@ -54,29 +56,29 @@ const networkCandidates = {
 
 // Insert only currently available networks into the configuration.
 let _loaded = {};
-for (let network of Object.entries(networkCandidates)) {
-    if (network[1].provider) {
-        networks[network[0]] = network[1];
+for (const [name, network] of Object.entries(networkCandidates)) {
+    if (network.provider) {
+        networks[name] = network;
         continue;
     }
-    _loaded[network[0]] = false;
+    _loaded[name] = false;
     let request = http.request(
         {
             method: "POST",
-            hostname: network[1].host,
-            port: network[1].port,
+            hostname: network.host,
+            port: network.port,
             path: "/",
             agent: false,
             headers: {"Content-Type": "application/json"}
         },
         (response) => {
-            _loaded[network[0]] = true
+            _loaded[name] = true;
             if (response.statusCode === 200) {
-                networks[network[0]] = network[1];
+                networks[name] = network;
             }
         }
-    )
-    request.on("error", () => _loaded[network[0]] = true)
+    );
+    request.on("error", () => _loaded[name] = true);
     request.write(
         JSON.stringify({
             jsonrpc: "2.0",
@@ -90,7 +92,7 @@ for (let network of Object.entries(networkCandidates)) {
 deasync.loopWhile(() => Object.values(_loaded).some((l) => !l));
 
 module.exports = {
-    networks: networks,
+    networks,
     solc: {
         optimizer: {
             enabled: true,

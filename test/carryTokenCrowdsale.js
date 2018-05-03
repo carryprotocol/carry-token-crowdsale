@@ -15,10 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const { assertEq, assertFail } = require("./utils");
 
-const CarryToken = artifacts.require("CarryToken");
 const CarryTokenCrowdsale = artifacts.require("CarryTokenCrowdsale");
 
-contract('CarryTokenCrowdsale', async (accounts) => {
+contract("CarryTokenCrowdsale", async (accounts) => {
     const reservedAccounts = 1;
     let accountIndex = reservedAccounts;
     const getAccount = () => {
@@ -27,19 +26,17 @@ contract('CarryTokenCrowdsale', async (accounts) => {
             accountIndex = reservedAccounts;
         }
         return account;
-    }
+    };
 
     const fundWallet = accounts[0];
     const fundOwner = accounts[0];
-    let token;
     let fund;
     before(async () => {
-        token = await CarryToken.deployed();
         fund = await CarryTokenCrowdsale.deployed();
     });
 
-    let withoutBalanceChangeIt = (label, fA, fB) => it(label, async () => {
-        const pre = fB ? fA : async (_) => null;
+    const withoutBalanceChangeIt = (label, fA, fB) => it(label, async () => {
+        const pre = fB ? fA : async () => null;
         const test = fB ? fB : fA;
         const contributor = getAccount();
 
@@ -61,7 +58,7 @@ contract('CarryTokenCrowdsale', async (accounts) => {
             web3.eth.getBalance(fundWallet),
             "Amount must not be sent to the fund [" + fundWallet + "]"
         );
-    })
+    });
 
     withoutBalanceChangeIt(
         "should not receive ETH from address not whitelisted",
@@ -121,7 +118,7 @@ contract('CarryTokenCrowdsale', async (accounts) => {
                 from: contributor,
             });
             const individualMaxCapWei = await fund.individualMaxCapWei();
-            return individualMaxCapWei.minus(amount)
+            return individualMaxCapWei.minus(amount);
         },
         async (contributor, remainingAllowedPurchase) => {
             await assertFail(

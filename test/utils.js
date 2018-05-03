@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 
 function assertEq(expected, actual, message) {
     assert.isTrue(
@@ -5,7 +6,7 @@ function assertEq(expected, actual, message) {
         message + "\n      expected: " + expected.toString() +
         "\n      actual:   " + actual.toString() +
         "\n      delta:    " + expected.minus(actual).toString() + "\n      "
-    )
+    );
 }
 
 async function assertFail(promise, message) {
