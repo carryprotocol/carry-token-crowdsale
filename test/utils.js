@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 function multipleContracts(contracts, callback) {
-    for (const contractName of contracts) {
+    for (const [contractName, initArgs] of Object.entries(contracts)) {
         const CarryToken = artifacts.require("CarryToken");
         const Contract = artifacts.require(contractName);
 
@@ -18,25 +18,16 @@ function multipleContracts(contracts, callback) {
 
             const fundWallet = accounts[0];
             const fundOwner = accounts[0];
-            let fund;
+            let fund = null;
+            let token = null;
 
             before(async function () {
                 try {
                     fund = await Contract.deployed();
                 } catch (e) {
-                    let carryToken = await CarryToken.deployed();
-                    fund = await Contract.new(
-                        // Use the same arguments to the presale.  See also
-                        // presale constant on migrations/2_deploy_contracts.js
-                        // file.
-                        fundWallet,  // wallet
-                        carryToken.address,  // token
-                        74750,  // rate
-                        web3.toWei(5000410, "finney"),  // cap
-                        web3.toWei(99, "finney"),  // individualMinPurchaseWei
-                        web3.toWei(50, "ether"),  // individualMaxCapWei
-                    );
-                    await carryToken.mint(
+                    token = await CarryToken.deployed();
+                    fund = await Contract.new(...initArgs(fundWallet, token));
+                    await token.mint(
                         fund.address,
                         new web3.BigNumber(
                             web3.toWei(5000410, "finney")
@@ -44,14 +35,19 @@ function multipleContracts(contracts, callback) {
                         {from: fundOwner}
                     );
                 }
+                if (token == null) {
+                    token = new CarryToken(await fund.token());
+                }
             });
 
             callback({
+                contractName: contractName,
                 accounts,
                 getAccount,
                 fundWallet,
                 fundOwner,
                 getFund: () => fund,
+                getToken: () => token,
             });
         });
     }

@@ -22,7 +22,7 @@ import "./GradualDeliveryCrowdsale.sol";
  * @title CarryTokenPresale
  * @dev The Carry token presale contract.
  */
-contract CarryTokenPresale is CarryTokenCrowdsale {
+contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
     // FIXME: Here we've wanted to use constructor() keyword instead,
     // but solium/solhint lint softwares don't parse it properly as of
     // April 2018.
@@ -40,6 +40,6 @@ contract CarryTokenPresale is CarryTokenCrowdsale {
         _cap,
         _individualMinPurchaseWei,
         _individualMaxCapWei
-    ) {
+    ) GradualDeliveryCrowdsale (_rate, _wallet, _token) {
     }
 }

@@ -16,7 +16,30 @@
 const { assertEq, assertFail, multipleContracts } = require("./utils");
 
 multipleContracts(
-    ["CarryTokenCrowdsale", "CarryTokenPresale"],
+    {
+        "CarryTokenCrowdsale": (fundWallet, token) => [
+            // Use the same arguments to the presale (though not necessarily).
+            // See also presale constant on migrations/2_deploy_contracts.js
+            // file.
+            fundWallet,  // wallet
+            token.address,  // token contract
+            74750,  // rate
+            web3.toWei(5000410, "finney"),  // cap
+            web3.toWei(99, "finney"),  // individualMinPurchaseWei
+            web3.toWei(50, "ether"),  // individualMaxCapWei
+        ],
+        "CarryTokenPresale": (fundWallet, token) => [
+            // Use the same arguments to the presale (though not necessarily).
+            // See also presale constant on migrations/2_deploy_contracts.js
+            // file.
+            fundWallet,  // wallet
+            token.address,  // token contract
+            74750,  // rate
+            web3.toWei(5000410, "finney"),  // cap
+            web3.toWei(99, "finney"),  // individualMinPurchaseWei
+            web3.toWei(50, "ether"),  // individualMaxCapWei
+        ],
+    },
     async function ({ getAccount, fundWallet, fundOwner, getFund }) {
         function withoutBalanceChangeIt (label, fA, fB) {
             it(label, async () => {
