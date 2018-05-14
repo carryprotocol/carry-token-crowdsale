@@ -58,11 +58,26 @@ function multipleContracts(contracts, callback) {
 }
 
 function assertEq(expected, actual, message) {
+    expected = new web3.BigNumber(expected);
     assert.isTrue(
         expected.eq(actual),
-        message + "\n      expected: " + expected.toString() +
+        message +
+        "\n      expected: " + expected.toString() +
         "\n      actual:   " + actual.toString() +
-        "\n      delta:    " + expected.minus(actual).toString() + "\n      "
+        "\n      delta:    " + expected.minus(actual).toString() +
+        "\n      "
+    );
+}
+
+function assertNotEq(expected, actual, message) {
+    expected = new web3.BigNumber(expected);
+    assert.isFalse(
+        expected.eq(actual),
+        message +
+        "\nexpected not to be: " + expected.toString() +
+        "\n      actual:       " + actual.toString() +
+        "\n      delta:        " + expected.minus(actual).toString() +
+        "\n      "
     );
 }
 
@@ -78,7 +93,8 @@ async function assertFail(promise, message) {
 }
 
 module.exports = {
-    multipleContracts: multipleContracts,
-    assertEq: assertEq,
-    assertFail: assertFail,
+    multipleContracts,
+    assertEq,
+    assertNotEq,
+    assertFail,
 };
