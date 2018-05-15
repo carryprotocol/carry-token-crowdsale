@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const CarryToken = artifacts.require("CarryToken");
-const CarryTokenCrowdsale = artifacts.require("CarryTokenCrowdsale");
+const CarryTokenPresale = artifacts.require("CarryTokenPresale");
 
 const presale = {
     // See also <https://carryprotocol.io/#section-token-distribution>.
@@ -43,7 +43,7 @@ module.exports = (deployer, network, accounts) => {
     }).then((_carryToken) => {
         carryToken = _carryToken;
         return deployer.deploy(
-            CarryTokenCrowdsale,
+            CarryTokenPresale,
             accounts[0],
             carryToken.address,
             presale.rate,
@@ -52,10 +52,10 @@ module.exports = (deployer, network, accounts) => {
             presale.individualMaxCapWei
         );
     }).then(() => {
-        return CarryTokenCrowdsale.deployed();
-    }).then((carryTokenCrowdsale) => {
+        return CarryTokenPresale.deployed();
+    }).then((carryTokenPresale) => {
         return carryToken.mint(
-            carryTokenCrowdsale.address,
+            carryTokenPresale.address,
             new web3.BigNumber(presale.cap).mul(presale.rate),
             {from: accounts[0]}
         );

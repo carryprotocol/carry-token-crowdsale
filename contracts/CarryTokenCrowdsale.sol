@@ -20,6 +20,11 @@ import "openzeppelin-solidity/contracts/crowdsale/validation/WhitelistedCrowdsal
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CarryToken.sol";
 
+/**
+ * @title CarryTokenCrowdsale
+ * @dev The common base contract for both sales: the Carry token presale,
+ * and the Carry token public crowdsale.
+ */
 contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale {
     using SafeMath for uint256;
 

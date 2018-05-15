@@ -1,11 +1,79 @@
 /* eslint-disable no-console */
 
+function multipleContracts(contracts, callback) {
+    for (const [contractName, initArgs] of Object.entries(contracts)) {
+        const CarryToken = artifacts.require("CarryToken");
+        const Contract = artifacts.require(contractName);
+
+        contract(contractName, async function (accounts) {
+            const reservedAccounts = 1;
+            let accountIndex = reservedAccounts;
+            const getAccount = () => {
+                const account = accounts[accountIndex++];
+                if (accountIndex >= accounts.length) {
+                    accountIndex = reservedAccounts;
+                }
+                return account;
+            };
+
+            const fundWallet = accounts[0];
+            const fundOwner = accounts[0];
+            let fund = null;
+            let token = null;
+
+            before(async function () {
+                try {
+                    fund = await Contract.deployed();
+                } catch (e) {
+                    token = await CarryToken.deployed();
+                    fund = await Contract.new(...initArgs(fundWallet, token));
+                    await token.mint(
+                        fund.address,
+                        new web3.BigNumber(
+                            web3.toWei(5000410, "finney")
+                        ).mul(74750),
+                        {from: fundOwner}
+                    );
+                }
+                if (token == null) {
+                    token = new CarryToken(await fund.token());
+                }
+            });
+
+            callback({
+                contractName: contractName,
+                accounts,
+                getAccount,
+                fundWallet,
+                fundOwner,
+                getFund: () => fund,
+                getToken: () => token,
+            });
+        });
+    }
+}
+
 function assertEq(expected, actual, message) {
+    expected = new web3.BigNumber(expected);
     assert.isTrue(
         expected.eq(actual),
-        message + "\n      expected: " + expected.toString() +
+        message +
+        "\n      expected: " + expected.toString() +
         "\n      actual:   " + actual.toString() +
-        "\n      delta:    " + expected.minus(actual).toString() + "\n      "
+        "\n      delta:    " + expected.minus(actual).toString() +
+        "\n      "
+    );
+}
+
+function assertNotEq(expected, actual, message) {
+    expected = new web3.BigNumber(expected);
+    assert.isFalse(
+        expected.eq(actual),
+        message +
+        "\nexpected not to be: " + expected.toString() +
+        "\n      actual:       " + actual.toString() +
+        "\n      delta:        " + expected.minus(actual).toString() +
+        "\n      "
     );
 }
 
@@ -21,6 +89,8 @@ async function assertFail(promise, message) {
 }
 
 module.exports = {
-    assertEq: assertEq,
-    assertFail: assertFail,
+    multipleContracts,
+    assertEq,
+    assertNotEq,
+    assertFail,
 };
