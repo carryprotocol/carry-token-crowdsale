@@ -21,19 +21,27 @@ function multipleContracts(contracts, callback) {
             let fund = null;
             let token = null;
 
+            const createFund = async (returnToken = false) => {
+                token = await CarryToken.deployed();
+                fund = await Contract.new(...initArgs(fundWallet, token));
+                await token.mint(
+                    fund.address,
+                    new web3.BigNumber(
+                        web3.toWei(5000410, "finney")
+                    ).mul(74750),
+                    {from: fundOwner}
+                );
+                if (returnToken) {
+                    return [fund, token];
+                }
+                return fund;
+            };
+
             before(async function () {
                 try {
                     fund = await Contract.deployed();
                 } catch (e) {
-                    token = await CarryToken.deployed();
-                    fund = await Contract.new(...initArgs(fundWallet, token));
-                    await token.mint(
-                        fund.address,
-                        new web3.BigNumber(
-                            web3.toWei(5000410, "finney")
-                        ).mul(74750),
-                        {from: fundOwner}
-                    );
+                    [fund, token] = await createFund(true);
                 }
                 if (token == null) {
                     token = new CarryToken(await fund.token());
@@ -48,6 +56,7 @@ function multipleContracts(contracts, callback) {
                 fundOwner,
                 getFund: () => fund,
                 getToken: () => token,
+                createFund: createFund,
             });
         });
     }
