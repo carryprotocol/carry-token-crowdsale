@@ -22,7 +22,7 @@ const {
 
 multipleContracts(
     {
-        "GradualDeliveryCrowdsale": (fundWallet, token) => [
+        "SampleGradualDeliveryCrowdsale": (fundWallet, token) => [
             74750,  // rate
             fundWallet,  // wallet
             token.address,  // token contract

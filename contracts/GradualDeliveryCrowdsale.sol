@@ -32,16 +32,6 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     mapping(address => uint256) public balances;
     address[] beneficiaries;
 
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function GradualDeliveryCrowdsale(
-        uint256 _rate,
-        address _wallet,
-        ERC20 _token
-    ) public Crowdsale(_rate, _wallet, _token) Ownable() {
-    }
-
     /**
      * @dev Deliver only the given ratio of tokens to the beneficiaries.
      * For example, where there are two beneficiaries of each balance 90 CRE and
