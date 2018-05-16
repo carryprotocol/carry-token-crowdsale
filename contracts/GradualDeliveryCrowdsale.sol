@@ -27,20 +27,11 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
  * several times when the contract owner calls deliverTokenRatio() method.
  */
 contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
+    using SafeMath for uint;
     using SafeMath for uint256;
 
     mapping(address => uint256) public balances;
     address[] beneficiaries;
-
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function GradualDeliveryCrowdsale(
-        uint256 _rate,
-        address _wallet,
-        ERC20 _token
-    ) public Crowdsale(_rate, _wallet, _token) Ownable() {
-    }
 
     /**
      * @dev Deliver only the given ratio of tokens to the beneficiaries.
@@ -53,8 +44,41 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         uint256 _numerator,
         uint256 _denominator
     ) external onlyOwner {
+        _deliverTokensInRatio(
+            _numerator,
+            _denominator,
+            0,
+            beneficiaries.length
+        );
+    }
+
+    /**
+     * @dev It's mostly same to deliverTokensInRatio(), except it processes
+     * only a particular range of the list of beneficiaries.
+     */
+    function deliverTokensInRatioFromTo(
+        uint256 _numerator,
+        uint256 _denominator,
+        uint _from,
+        uint _to
+    ) external onlyOwner {
+        require(_from < _to);
+        _deliverTokensInRatio(_numerator, _denominator, _from, _to);
+    }
+
+    function _deliverTokensInRatio(
+        uint256 _numerator,
+        uint256 _denominator,
+        uint _from,
+        uint _to
+    ) internal {
+        require(_denominator > 0);
         require(_numerator <= _denominator);
-        for (uint i = 0; i < beneficiaries.length; i = i.add(1)) {
+        uint to = _to;
+        if (to > beneficiaries.length) {
+            to = beneficiaries.length;
+        }
+        for (uint i = _from; i < to; i = i.add(1)) {
             address beneficiary = beneficiaries[i];
             uint256 balance = balances[beneficiary];
             if (balance > 0) {

@@ -15,31 +15,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.23;
 
-import "./CarryTokenCrowdsale.sol";
-import "./GradualDeliveryCrowdsale.sol";
+import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../contracts/GradualDeliveryCrowdsale.sol";
 
-/**
- * @title CarryTokenPresale
- * @dev The Carry token presale contract.
- */
-contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
+// Since GradualDeliveryCrowdsale is abstract and does not have its own
+// constructor, we need to define a concrete class inheriting it and having
+// its own constructor.
+contract SampleGradualDeliveryCrowdsale is GradualDeliveryCrowdsale {
     // FIXME: Here we've wanted to use constructor() keyword instead,
     // but solium/solhint lint softwares don't parse it properly as of
     // April 2018.
-    function CarryTokenPresale(
-        address _wallet,
-        CarryToken _token,
+    function SampleGradualDeliveryCrowdsale(
         uint256 _rate,
-        uint256 _cap,
-        uint256 _individualMinPurchaseWei,
-        uint256 _individualMaxCapWei
-    ) public CarryTokenCrowdsale(
-        _wallet,
-        _token,
-        _rate,
-        _cap,
-        _individualMinPurchaseWei,
-        _individualMaxCapWei
-    ) {
+        address _wallet,
+        ERC20 _token
+    ) public Crowdsale(_rate, _wallet, _token) Ownable() {
     }
 }

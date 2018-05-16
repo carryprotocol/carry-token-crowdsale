@@ -22,7 +22,7 @@ const {
 
 multipleContracts(
     {
-        "GradualDeliveryCrowdsale": (fundWallet, token) => [
+        "SampleGradualDeliveryCrowdsale": (fundWallet, token) => [
             74750,  // rate
             fundWallet,  // wallet
             token.address,  // token contract
@@ -39,7 +39,9 @@ multipleContracts(
             web3.toWei(50, "ether"),  // individualMaxCapWei
         ],
     },
-    async ({ contractName, getAccount, fundOwner, getFund, getToken }) => {
+    async ({
+        contractName, getAccount, fundOwner, getFund, getToken, createFund,
+    }) => {
         async function addToWhitelist(...contributors) {
             if (contractName === "CarryTokenPresale") {
                 const fund = getFund();
@@ -130,6 +132,49 @@ multipleContracts(
                     rate.mul(etherAmounts[i]).div(2),
                     "Only half of tokens should be transferred"
                 );
+            }
+        });
+
+        it("can deliver tokens from & to a particular offset", async () => {
+            const contributors = [
+                getAccount(), getAccount(), getAccount(),
+                getAccount(), getAccount(), getAccount(),
+            ];
+            const fund = await createFund();
+            // Since Truffle doesn't provide true clean-room fixture but
+            // it is stateful, we need to create a new token sale contract.
+            const token = getToken();
+            const initialBalances =
+                await Promise.all(contributors.map(c => token.balanceOf(c)));
+            await addToWhitelist(...contributors);
+            for (let i = 0; i < contributors.length; i++) {
+                await fund.sendTransaction({
+                    value: web3.toWei((i + 1) * 100, "finney"),
+                    from: contributors[i],
+                });
+            }
+            const from = 2, to = 5;
+            await fund.deliverTokensInRatioFromTo(
+                1, 2, from, to,
+                {from: fundOwner}
+            );
+            const finalBalances =
+                await Promise.all(contributors.map(c => token.balanceOf(c)));
+            const rate = await fund.rate();
+            for (let i = 0; i < contributors.length; i++) {
+                if (from <= i && i < to) {
+                    assertEq(
+                        rate.mul(web3.toWei(50, "finney")).mul(i + 1),
+                        finalBalances[i].minus(initialBalances[i]),
+                        "Half of tokens should be transferred [" + i + "]"
+                    );
+                } else {
+                    assertEq(
+                        finalBalances[i],
+                        initialBalances[i],
+                        "No tokens should be transferred [" + i + "]"
+                    );
+                }
             }
         });
     }
