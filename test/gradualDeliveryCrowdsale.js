@@ -431,6 +431,32 @@ multipleContracts(
             }
         );
 
+        it("accumulate the deposit if refunded multiple times", async () => {
+            const {
+                fund,
+                beneficiary,
+            } = await setUpRefundDepositedState(
+                web3.toWei(500, "finney"),
+                web3.toWei(100, "finney"),
+            );
+            let deposit = await fund.refundedDeposits(beneficiary);
+            assertEq(
+                web3.toWei(100, "finney"),
+                deposit,
+                "The remain deposit should be 0.1 ETH"
+            );
+            await fund.depositRefund(beneficiary, {
+                value: web3.toWei(100, "finney"),
+                from: fundOwner,
+            });
+            deposit = await fund.refundedDeposits(beneficiary);
+            assertEq(
+                web3.toWei(200, "finney"),
+                deposit,
+                "The remain deposit should be 0.2 ETH"
+            );
+        });
+
         it(
             "disallows any other than the beneficiary to receive the " +
             "refunded deposit to a specified address",

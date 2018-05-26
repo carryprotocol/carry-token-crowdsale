@@ -112,7 +112,9 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         require(tokenBalance >= tokensToRefund);
         weiRaised = weiRaised.sub(weiToRefund);
         balances[_beneficiary] = tokenBalance.sub(tokensToRefund);
-        refundedDeposits[_beneficiary] = weiToRefund;
+        refundedDeposits[_beneficiary] = refundedDeposits[_beneficiary].add(
+            weiToRefund
+        );
     }
 
     /**
