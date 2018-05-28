@@ -25,6 +25,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
  * @dev Crowdsale that does not deliver tokens to a beneficiary immediately
  * after they has just purchased, but instead partially delivers tokens through
  * several times when the contract owner calls deliverTokenRatio() method.
+ * Note that it also provides methods to selectively refund some purchases.
  */
 contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     using SafeMath for uint;
@@ -32,6 +33,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
 
     mapping(address => uint256) public balances;
     address[] beneficiaries;
+    mapping(address => uint256) public refundedDeposits;
 
     /**
      * @dev Deliver only the given ratio of tokens to the beneficiaries.
@@ -95,5 +97,62 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     ) internal {
         beneficiaries.push(_beneficiary);
         balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+    }
+    /**
+     * @dev Refund the given ether to a beneficiary.  It only can be called by
+     * either the contract owner or the wallet (i.e. Crowdsale.wallet) address.
+     * The only amount of the ether sent together in a transaction is refunded.
+     */
+    function depositRefund(address _beneficiary) public payable {
+        require(msg.sender == owner || msg.sender == wallet);
+        uint256 weiToRefund = msg.value;
+        require(weiToRefund <= weiRaised);
+        uint256 tokensToRefund = _getTokenAmount(weiToRefund);
+        uint256 tokenBalance = balances[_beneficiary];
+        require(tokenBalance >= tokensToRefund);
+        weiRaised = weiRaised.sub(weiToRefund);
+        balances[_beneficiary] = tokenBalance.sub(tokensToRefund);
+        refundedDeposits[_beneficiary] = refundedDeposits[_beneficiary].add(
+            weiToRefund
+        );
+    }
+
+    /**
+     * @dev Receive one's refunded ethers in the deposit.  It can be called by
+     * either the contract owner or the beneficiary of the refund.
+     * The deposited ether is sent to only the beneficiary regardless it is
+     * called by which address, either the contract owner or the beneficary.
+     * It usually can be systemically called together right after
+     * depositRefund() is called.
+     */
+    function receiveRefund(address _beneficiary) public {
+        require(msg.sender == owner || msg.sender == _beneficiary);
+        _transferRefund(_beneficiary, _beneficiary);
+    }
+
+    /**
+     * @dev Similar to receiverRefund() except that it cannot be called by
+     * even the contract owner, but only the beneficiary of the refund.
+     * It also takes an additional parameter, a wallet address to receiver
+     * the deposited (refunded) ethers.
+     * The main purpose of this method is to receive the refunded ethers
+     * to the other address than the beneficiary address.  Usually after
+     * depositRefund() is called, receiveRefund() is immediately executed
+     * together by the automated system, but there could be cases that
+     * the the beneficiary address is a smart contract and it causes
+     * the transaction to transfer ethers in any reason.  In such cases,
+     * the deposit beneficiary need to "pull" his ethers to his another
+     * wallet address by calling this method.
+     */
+    function receiveRefundTo(address _beneficiary, address _wallet) public {
+        require(msg.sender == _beneficiary);
+        _transferRefund(_beneficiary, _wallet);
+    }
+
+    function _transferRefund(address _beneficiary, address _wallet) internal {
+        uint256 depositedWeiAmount = refundedDeposits[_beneficiary];
+        require(depositedWeiAmount > 0);
+        refundedDeposits[_beneficiary] = 0;
+        _wallet.transfer(depositedWeiAmount);
     }
 }

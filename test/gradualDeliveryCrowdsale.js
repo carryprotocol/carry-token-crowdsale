@@ -40,7 +40,13 @@ multipleContracts(
         ],
     },
     async ({
-        contractName, getAccount, fundOwner, getFund, getToken, createFund,
+        contractName,
+        getAccount,
+        fundOwner,
+        fundWallet,
+        getFund,
+        getToken,
+        createFund,
     }) => {
         async function addToWhitelist(...contributors) {
             if (contractName === "CarryTokenPresale") {
@@ -177,5 +183,302 @@ multipleContracts(
                 }
             }
         });
+
+        // fixture
+        async function setUpPurchasedState(value) {
+            const fund = await createFund();
+            const beneficiary = getAccount();
+            await addToWhitelist(beneficiary);
+            await fund.sendTransaction({
+                value,
+                from: beneficiary,
+            });
+            return {
+                fund,
+                beneficiary,
+            };
+        }
+
+        it(
+            "disallows to be requested to refund by other than the fund " +
+            "owner or the fund wallet",
+            async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpPurchasedState(web3.toWei(500, "finney"));
+                const previousWeiRaised = await fund.weiRaised();
+                await assertFail(
+                    fund.depositRefund(beneficiary, {
+                        value: web3.toWei(500, "finney"),
+                        from: beneficiary,
+                    }),
+                    "Refund should be failed due to the lack of permission"
+                );
+                assertEq(
+                    previousWeiRaised,
+                    await fund.weiRaised(),
+                    "The refund should not affect to weiRaised amount."
+                );
+                const thirdPerson = getAccount();
+                await assertFail(
+                    fund.depositRefund(beneficiary, {
+                        value: web3.toWei(500, "finney"),
+                        from: thirdPerson,
+                    }),
+                    "Refund should be failed due to the lack of permission"
+                );
+                assertEq(
+                    previousWeiRaised,
+                    await fund.weiRaised(),
+                    "The refund should not affect to weiRaised amount."
+                );
+            }
+        );
+
+        for (const [label, executor] of Object.entries({
+            owner: fundOwner,
+            wallet: fundWallet,
+        })) {
+            it(
+                "allows the fund " + label + " to request to refund a purchase",
+                async function () {
+                    const {
+                        fund,
+                        beneficiary,
+                    } = await setUpPurchasedState(web3.toWei(500, "finney"));
+                    const previousWeiRaised = await fund.weiRaised();
+                    await fund.depositRefund(beneficiary, {
+                        value: web3.toWei(300, "finney"),
+                        from: executor,
+                    });
+                    const rate = await fund.rate();
+                    assertEq(
+                        rate.mul(web3.toWei(200, "finney")),
+                        await fund.balances(beneficiary),
+                        "A beneficiary's balance has to be consumed."
+                    );
+                    assertEq(
+                        web3.toWei(300, "finney"),
+                        await fund.refundedDeposits(beneficiary),
+                        "A beneficiary's refunded deposit has to be filled."
+                    );
+                    assertEq(
+                        previousWeiRaised.minus(web3.toWei(300, "finney")),
+                        await fund.weiRaised(),
+                        "The refund should affect to weiRaised amount."
+                    );
+                }
+            );
+
+            it("disallows to refund more than purchased", async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpPurchasedState(web3.toWei(500, "finney"));
+                await assertFail(
+                    fund.depositRefund(beneficiary, {
+                        value: web3.toWei(501, "finney"),
+                        from: executor,
+                    }),
+                    "Refund should be failed due to the insufficient balance."
+                );
+                const rate = await fund.rate();
+                assertEq(
+                    rate.mul(web3.toWei(500, "finney")),
+                    await fund.balances(beneficiary),
+                    "The balance should not change"
+                );
+            });
+        }
+
+        it(
+            "disallows to receive the refund if there is no refunded deposit",
+            async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpPurchasedState(web3.toWei(500, "finney"));
+                await assertFail(
+                    fund.receiveRefund(beneficiary, {
+                        from: beneficiary
+                    }),
+                    "Withdrawal should be failed due to the lack of deposit"
+                );
+            }
+        );
+
+        // fixture
+        async function setUpRefundDepositedState(purchased, refunded) {
+            purchased = new web3.BigNumber(purchased);
+            assert.isTrue(
+                purchased.gte(refunded),
+                "The purchased amount (" + purchased.toString() + ") has to " +
+                "equal to or be greater than the amount to refund (" +
+                refunded.toString() + ")"
+            );
+            const {
+                fund,
+                beneficiary,
+            } = await setUpPurchasedState(purchased);
+            await fund.depositRefund(beneficiary, {
+                value: refunded,
+                from: fundWallet,
+            });
+            return {
+                fund,
+                beneficiary,
+            };
+        }
+
+        it(
+            "disallows to receive the refund by other than the fund owner " +
+            "or the beneficiary",
+            async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpRefundDepositedState(
+                    web3.toWei(500, "finney"),
+                    web3.toWei(500, "finney"),
+                );
+                const thirdPerson = getAccount();
+                await assertFail(
+                    fund.receiveRefund(beneficiary, { from: thirdPerson }),
+                    "Withdrawal from the refunded deposit should be failed."
+                );
+            }
+        );
+
+        for (const [label, getExecutor] of Object.entries({
+            "fund owner": () => fundOwner,
+            beneficiary: (address) => address,
+        })) {
+            it(
+                "allows the " + label + " to receive the refunded deposit",
+                async function () {
+                    const {
+                        fund,
+                        beneficiary,
+                    } = await setUpRefundDepositedState(
+                        web3.toWei(500, "finney"),
+                        web3.toWei(500, "finney"),
+                    );
+                    const previousEther = web3.eth.getBalance(beneficiary);
+                    const executor = getExecutor(beneficiary);
+                    await fund.receiveRefund(beneficiary, { from: executor });
+                    assertEq(
+                        0,
+                        await fund.refundedDeposits(beneficiary),
+                        "The refunded deposit should be empty."
+                    );
+                    if (executor == beneficiary) {
+                        /* If an executor is the same to the beneficiary,
+                        we need to calculate the gas fee used for making
+                        a transaction. */
+                        const currentEther = web3.eth.getBalance(beneficiary);
+                        assert.isTrue(
+                            currentEther.gt(
+                                previousEther.plus(web3.toWei(490, "finney"))
+                            ),
+                            "The balance should be greater than 0.49 ETH: " +
+                            currentEther.minus(previousEther).toString()
+                        );
+                        assert.isTrue(
+                            currentEther.lte(
+                                previousEther.plus(web3.toWei(500, "finney"))
+                            ),
+                            "The balance should be less than 0.501 ETH: " +
+                            currentEther.minus(previousEther).toString()
+                        );
+                    } else {
+                        assertEq(
+                            previousEther.plus(web3.toWei(500, "finney")),
+                            web3.eth.getBalance(beneficiary),
+                            "The purchased ethers should be completely refunded"
+                        );
+                    }
+                }
+            );
+        }
+
+        it(
+            "allows the beneficiary to receive the refunded deposit to " +
+            "his another account (address)",
+            async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpRefundDepositedState(
+                    web3.toWei(500, "finney"),
+                    web3.toWei(500, "finney"),
+                );
+                const anotherAddress = getAccount();
+                const previousEther = web3.eth.getBalance(anotherAddress);
+                await fund.receiveRefundTo(beneficiary, anotherAddress, {
+                    from: beneficiary,
+                });
+                assertEq(
+                    0,
+                    await fund.refundedDeposits(beneficiary),
+                    "The refunded deposit should be empty."
+                );
+                assertEq(
+                    previousEther.plus(web3.toWei(500, "finney")),
+                    web3.eth.getBalance(anotherAddress),
+                    "The purchased ethers should be completely refunded."
+                );
+            }
+        );
+
+        it("accumulate the deposit if refunded multiple times", async () => {
+            const {
+                fund,
+                beneficiary,
+            } = await setUpRefundDepositedState(
+                web3.toWei(500, "finney"),
+                web3.toWei(100, "finney"),
+            );
+            let deposit = await fund.refundedDeposits(beneficiary);
+            assertEq(
+                web3.toWei(100, "finney"),
+                deposit,
+                "The remain deposit should be 0.1 ETH"
+            );
+            await fund.depositRefund(beneficiary, {
+                value: web3.toWei(100, "finney"),
+                from: fundOwner,
+            });
+            deposit = await fund.refundedDeposits(beneficiary);
+            assertEq(
+                web3.toWei(200, "finney"),
+                deposit,
+                "The remain deposit should be 0.2 ETH"
+            );
+        });
+
+        it(
+            "disallows any other than the beneficiary to receive the " +
+            "refunded deposit to a specified address",
+            async function () {
+                const {
+                    fund,
+                    beneficiary,
+                } = await setUpRefundDepositedState(
+                    web3.toWei(500, "finney"),
+                    web3.toWei(500, "finney"),
+                );
+                for (const address of [getAccount(), fundOwner, beneficiary]) {
+                    for (const executor of [getAccount(), fundOwner]) {
+                        await assertFail(
+                            fund.receiveRefundTo(beneficiary, address, {
+                                from: executor,
+                            }),
+                            "Withdrawal from the deposit should be failed."
+                        );
+                    }
+                }
+            }
+        );
     }
 );
