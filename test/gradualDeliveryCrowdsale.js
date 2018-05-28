@@ -382,6 +382,12 @@ multipleContracts(
                         web3.toWei(500, "finney"),
                         web3.toWei(500, "finney"),
                     );
+                    let previousContribution;
+                    if (contractName === "CarryTokenPresale") {
+                        previousContribution = await fund.contributions(
+                            beneficiary
+                        );
+                    }
                     const previousEther = web3.eth.getBalance(beneficiary);
                     const executor = getExecutor(beneficiary);
                     const result = await fund.receiveRefund(beneficiary, {
@@ -426,6 +432,15 @@ multipleContracts(
                             previousEther.plus(web3.toWei(500, "finney")),
                             web3.eth.getBalance(beneficiary),
                             "The purchased ethers should be completely refunded"
+                        );
+                    }
+                    if (contractName === "CarryTokenPresale") {
+                        assertEq(
+                            previousContribution.minus(
+                                web3.toWei(500, "finney")
+                            ),
+                            await fund.contributions(beneficiary),
+                            "Individual contribution should be subtracted"
                         );
                     }
                 }
