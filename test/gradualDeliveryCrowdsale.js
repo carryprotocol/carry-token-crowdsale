@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const {
     assertEq,
+    assertEvents,
     assertFail,
     assertNotEq,
     multipleContracts,
@@ -90,10 +91,8 @@ multipleContracts(
 
         it("delivers tokens in the specified ratio", async function () {
             const contributors = [getAccount(), getAccount(), getAccount()];
-            const fund = getFund();
+            const fund = await createFund();
             const token = getToken();
-            const initialBalances =
-                await Promise.all(contributors.map(c => token.balanceOf(c)));
             await addToWhitelist(...contributors);
             const etherAmounts = [
                 web3.toWei(100, "finney"),
@@ -112,29 +111,31 @@ multipleContracts(
             }
             const intermediateBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
-            for (let i = 0; i < initialBalances.length; i++) {
+            for (const intermediateBalance of intermediateBalances) {
                 assertEq(
-                    initialBalances[i], intermediateBalances[i],
+                    0, intermediateBalance,
                     "Token must not be withdrawn imediately after purchase"
                 );
             }
-            await fund.deliverTokensInRatio(1, 2, {from: fundOwner});
+            const result = await fund.deliverTokensInRatio(1, 2, {
+                from: fundOwner
+            });
+            const rate = await fund.rate();
+            assertEvents(
+                contributors.map((address, i) => ({
+                    $event: "TokenDelivered",
+                    beneficiary: address,
+                    tokenAmount: rate.mul(etherAmounts[i]).div(2),
+                })).filter(({ tokenAmount }) => tokenAmount.gt(0)),
+                result
+            );
             const finalBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
-            assertNotEq(
-                initialBalances[0],
-                finalBalances[0],
-                "No token was transferred"
-            );
-            assertNotEq(
-                initialBalances[1],
-                finalBalances[1],
-                "No token was transferred"
-            );
-            const rate = await fund.rate();
-            for (let i = 0; i < initialBalances.length; i++) {
+            assertNotEq(0, finalBalances[0], "No token was transferred");
+            assertNotEq(0, finalBalances[1], "No token was transferred");
+            for (let i = 0; i < finalBalances.length; i++) {
                 assertEq(
-                    finalBalances[i].minus(initialBalances[i]),
+                    finalBalances[i],
                     rate.mul(etherAmounts[i]).div(2),
                     "Only half of tokens should be transferred"
                 );
@@ -160,13 +161,21 @@ multipleContracts(
                 });
             }
             const from = 2, to = 5;
-            await fund.deliverTokensInRatioFromTo(
+            const result = await fund.deliverTokensInRatioFromTo(
                 1, 2, from, to,
                 {from: fundOwner}
             );
+            const rate = await fund.rate();
+            assertEvents(
+                contributors.map((address, i) => ({
+                    $event: "TokenDelivered",
+                    beneficiary: address,
+                    tokenAmount: rate.mul(web3.toWei((i + 1) * 50, "finney")),
+                })).slice(from, to),
+                result
+            );
             const finalBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
-            const rate = await fund.rate();
             for (let i = 0; i < contributors.length; i++) {
                 if (from <= i && i < to) {
                     assertEq(
@@ -321,10 +330,19 @@ multipleContracts(
                 fund,
                 beneficiary,
             } = await setUpPurchasedState(purchased);
-            await fund.depositRefund(beneficiary, {
+            const rate = await fund.rate();
+            const result = await fund.depositRefund(beneficiary, {
                 value: refunded,
                 from: fundWallet,
             });
+            assertEvents([
+                {
+                    $event: "RefundDeposited",
+                    beneficiary: beneficiary,
+                    tokenAmount: rate.mul(refunded),
+                    weiAmount: new web3.BigNumber(refunded),
+                }
+            ], result);
             return {
                 fund,
                 beneficiary,
@@ -366,7 +384,19 @@ multipleContracts(
                     );
                     const previousEther = web3.eth.getBalance(beneficiary);
                     const executor = getExecutor(beneficiary);
-                    await fund.receiveRefund(beneficiary, { from: executor });
+                    const result = await fund.receiveRefund(beneficiary, {
+                        from: executor
+                    });
+                    assertEvents([
+                        {
+                            $event: "Refunded",
+                            beneficiary: beneficiary,
+                            receiver: beneficiary,
+                            weiAmount: new web3.BigNumber(
+                                web3.toWei(500, "finney")
+                            ),
+                        }
+                    ], result);
                     assertEq(
                         0,
                         await fund.refundedDeposits(beneficiary),
@@ -415,9 +445,20 @@ multipleContracts(
                 );
                 const anotherAddress = getAccount();
                 const previousEther = web3.eth.getBalance(anotherAddress);
-                await fund.receiveRefundTo(beneficiary, anotherAddress, {
-                    from: beneficiary,
-                });
+                const result = await fund.receiveRefundTo(
+                    beneficiary, anotherAddress,
+                    {from: beneficiary}
+                );
+                assertEvents([
+                    {
+                        $event: "Refunded",
+                        beneficiary: beneficiary,
+                        receiver: anotherAddress,
+                        weiAmount: new web3.BigNumber(
+                            web3.toWei(500, "finney")
+                        ),
+                    }
+                ], result);
                 assertEq(
                     0,
                     await fund.refundedDeposits(beneficiary),
@@ -445,10 +486,19 @@ multipleContracts(
                 deposit,
                 "The remain deposit should be 0.1 ETH"
             );
-            await fund.depositRefund(beneficiary, {
+            const result = await fund.depositRefund(beneficiary, {
                 value: web3.toWei(100, "finney"),
                 from: fundOwner,
             });
+            const rate = await fund.rate();
+            assertEvents([
+                {
+                    $event: "RefundDeposited",
+                    beneficiary: beneficiary,
+                    tokenAmount: rate.mul(web3.toWei(100, "finney")),
+                    weiAmount: new web3.BigNumber(web3.toWei(100, "finney")),
+                }
+            ], result);
             deposit = await fund.refundedDeposits(beneficiary);
             assertEq(
                 web3.toWei(200, "finney"),
