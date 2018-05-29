@@ -23,6 +23,8 @@ import "./GradualDeliveryCrowdsale.sol";
  * @dev The Carry token presale contract.
  */
 contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
+    using SafeMath for uint256;
+
     // FIXME: Here we've wanted to use constructor() keyword instead,
     // but solium/solhint lint softwares don't parse it properly as of
     // April 2018.
@@ -41,5 +43,13 @@ contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
         _individualMinPurchaseWei,
         _individualMaxCapWei
     ) {
+    }
+
+    function _transferRefund(address _beneficiary, address _wallet) internal {
+        uint256 depositedWeiAmount = refundedDeposits[_beneficiary];
+        super._transferRefund(_beneficiary, _wallet);
+        contributions[_beneficiary] = contributions[_beneficiary].sub(
+            depositedWeiAmount
+        );
     }
 }

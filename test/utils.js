@@ -86,6 +86,13 @@ function assertNotEq(expected, actual, message) {
     );
 }
 
+function assertEvents(expectedEvents, result) {
+    assert.deepEqual(
+        expectedEvents,
+        result.logs.map(log => ({ $event: log.event, ...log.args }))
+    );
+}
+
 async function assertFail(promise, message) {
     let failed = false;
     try {
@@ -102,4 +109,5 @@ module.exports = {
     assertEq,
     assertNotEq,
     assertFail,
+    assertEvents,
 };

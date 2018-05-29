@@ -35,6 +35,18 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     address[] beneficiaries;
     mapping(address => uint256) public refundedDeposits;
 
+    event TokenDelivered(address indexed beneficiary, uint256 tokenAmount);
+    event RefundDeposited(
+        address indexed beneficiary,
+        uint256 tokenAmount,
+        uint256 weiAmount
+    );
+    event Refunded(
+        address indexed beneficiary,
+        address indexed receiver,
+        uint256 weiAmount
+    );
+
     /**
      * @dev Deliver only the given ratio of tokens to the beneficiaries.
      * For example, where there are two beneficiaries of each balance 90 CRE and
@@ -87,6 +99,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
                 uint256 amount = balance.mul(_numerator).div(_denominator);
                 balances[beneficiary] = balance.sub(amount);
                 _deliverTokens(beneficiary, amount);
+                emit TokenDelivered(beneficiary, amount);
             }
         }
     }
@@ -115,6 +128,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         refundedDeposits[_beneficiary] = refundedDeposits[_beneficiary].add(
             weiToRefund
         );
+        emit RefundDeposited(_beneficiary, tokensToRefund, weiToRefund);
     }
 
     /**
@@ -154,5 +168,6 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         require(depositedWeiAmount > 0);
         refundedDeposits[_beneficiary] = 0;
         _wallet.transfer(depositedWeiAmount);
+        emit Refunded(_beneficiary, _wallet, depositedWeiAmount);
     }
 }
