@@ -59,7 +59,7 @@ contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale {
 
         // If a contributor already has purchased a minimum amount, say 0.1 ETH,
         // then they can purchase once again with less than a minimum amount,
-        // say 0.01 ETH, because they has already satisfied the minimum
+        // say 0.01 ETH, because they have already satisfied the minimum
         // purchase.
         require(contributionAfterPurchase >= individualMinPurchaseWei);
 

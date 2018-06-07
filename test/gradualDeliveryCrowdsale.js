@@ -101,13 +101,25 @@ multipleContracts(
             ];
             assert.equal(etherAmounts.length, contributors.length);
             for (let i = 0; i < etherAmounts.length; i++) {
-                if (etherAmounts[i] < 1) {
-                    continue;
+                let amount = new web3.BigNumber(etherAmounts[i]);
+                while (amount > 0) {
+                    // This simultates situations that a single beneficiary
+                    // (account) purhcases tokens through multiple times of
+                    // Ether transfers.
+                    //
+                    // Whether a beneficiary (account) purchases the amount
+                    // of tokens through multiple times or at a time,
+                    // they and their rights should be treated alike.
+                    const chunkValue = web3.BigNumber.min(
+                        amount,
+                        web3.toWei(200, "finney")
+                    );
+                    await fund.sendTransaction({
+                        value: chunkValue,
+                        from: contributors[i],
+                    });
+                    amount = amount.minus(chunkValue);
                 }
-                await fund.sendTransaction({
-                    value: etherAmounts[i],
-                    from: contributors[i],
-                });
             }
             const intermediateBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
@@ -160,9 +172,9 @@ multipleContracts(
                     from: contributors[i],
                 });
             }
-            const from = 2, to = 5;
-            const result = await fund.deliverTokensInRatioFromTo(
-                1, 2, from, to,
+            const startIndex = 2, endIndex = 5;
+            const result = await fund.deliverTokensInRatioOfRange(
+                1, 2, startIndex, endIndex,
                 {from: fundOwner}
             );
             const rate = await fund.rate();
@@ -171,13 +183,13 @@ multipleContracts(
                     $event: "TokenDelivered",
                     beneficiary: address,
                     tokenAmount: rate.mul(web3.toWei((i + 1) * 50, "finney")),
-                })).slice(from, to),
+                })).slice(startIndex, endIndex),
                 result
             );
             const finalBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
             for (let i = 0; i < contributors.length; i++) {
-                if (from <= i && i < to) {
+                if (startIndex <= i && i < endIndex) {
                     assertEq(
                         rate.mul(web3.toWei(50, "finney")).mul(i + 1),
                         finalBalances[i].minus(initialBalances[i]),

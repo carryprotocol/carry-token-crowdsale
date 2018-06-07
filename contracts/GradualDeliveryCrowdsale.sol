@@ -23,8 +23,8 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 /**
  * @title GradualDeliveryCrowdsale
  * @dev Crowdsale that does not deliver tokens to a beneficiary immediately
- * after they has just purchased, but instead partially delivers tokens through
- * several times when the contract owner calls deliverTokenRatio() method.
+ * after they have just purchased, but instead partially delivers tokens through
+ * several times when the contract owner calls deliverTokensInRatio() method.
  * Note that it also provides methods to selectively refund some purchases.
  */
 contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
@@ -70,29 +70,29 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
      * @dev It's mostly same to deliverTokensInRatio(), except it processes
      * only a particular range of the list of beneficiaries.
      */
-    function deliverTokensInRatioFromTo(
+    function deliverTokensInRatioOfRange(
         uint256 _numerator,
         uint256 _denominator,
-        uint _from,
-        uint _to
+        uint _startIndex,
+        uint _endIndex
     ) external onlyOwner {
-        require(_from < _to);
-        _deliverTokensInRatio(_numerator, _denominator, _from, _to);
+        require(_startIndex < _endIndex);
+        _deliverTokensInRatio(_numerator, _denominator, _startIndex, _endIndex);
     }
 
     function _deliverTokensInRatio(
         uint256 _numerator,
         uint256 _denominator,
-        uint _from,
-        uint _to
+        uint _startIndex,
+        uint _endIndex
     ) internal {
         require(_denominator > 0);
         require(_numerator <= _denominator);
-        uint to = _to;
-        if (to > beneficiaries.length) {
-            to = beneficiaries.length;
+        uint endIndex = _endIndex;
+        if (endIndex > beneficiaries.length) {
+            endIndex = beneficiaries.length;
         }
-        for (uint i = _from; i < to; i = i.add(1)) {
+        for (uint i = _startIndex; i < endIndex; i = i.add(1)) {
             address beneficiary = beneficiaries[i];
             uint256 balance = balances[beneficiary];
             if (balance > 0) {
@@ -108,12 +108,16 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         address _beneficiary,
         uint256 _tokenAmount
     ) internal {
-        beneficiaries.push(_beneficiary);
-        balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+        if (_tokenAmount > 0) {
+            if (balances[_beneficiary] <= 0) {
+                beneficiaries.push(_beneficiary);
+            }
+            balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+        }
     }
     /**
      * @dev Refund the given ether to a beneficiary.  It only can be called by
-     * either the contract owner or the wallet (i.e. Crowdsale.wallet) address.
+     * either the contract owner or the wallet (i.e., Crowdsale.wallet) address.
      * The only amount of the ether sent together in a transaction is refunded.
      */
     function depositRefund(address _beneficiary) public payable {
@@ -145,7 +149,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     }
 
     /**
-     * @dev Similar to receiverRefund() except that it cannot be called by
+     * @dev Similar to receiveRefund() except that it cannot be called by
      * even the contract owner, but only the beneficiary of the refund.
      * It also takes an additional parameter, a wallet address to receiver
      * the deposited (refunded) ethers.

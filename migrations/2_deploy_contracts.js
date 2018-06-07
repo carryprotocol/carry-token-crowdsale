@@ -34,6 +34,9 @@ const presale = {
     // we take 99 finney at least instead of 100 finney sharp.
     individualMinPurchaseWei: web3.toWei(99, "finney"),
     individualMaxCapWei: web3.toWei(50, "ether"),
+
+    // The wallet address to receive ethers.  It should be a multisig wallet.
+    wallet: "0x8D5F5f9a2621bE9d32896CF0172515Fb211E26bE",
 };
 
 module.exports = (deployer, network, accounts) => {
@@ -44,7 +47,7 @@ module.exports = (deployer, network, accounts) => {
         carryToken = _carryToken;
         return deployer.deploy(
             CarryTokenPresale,
-            accounts[0],
+            presale.wallet,
             carryToken.address,
             presale.rate,
             presale.cap,

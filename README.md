@@ -21,7 +21,7 @@ This repository contains:
 
 - `GradualDeliveryCrowdsale` which declares the base contract for token
   crowdsale that does not deliver tokens to a beneficiary immediately after
-  they has just purchased, but instead partially delivers tokens through
+  they have just purchased, but instead partially delivers tokens through
   several times, and
 
 - `CarryTokenPresale` which declares the contract for the Carry token presale
