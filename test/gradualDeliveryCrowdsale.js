@@ -101,13 +101,25 @@ multipleContracts(
             ];
             assert.equal(etherAmounts.length, contributors.length);
             for (let i = 0; i < etherAmounts.length; i++) {
-                if (etherAmounts[i] < 1) {
-                    continue;
+                let amount = new web3.BigNumber(etherAmounts[i]);
+                while (amount > 0) {
+                    // This simultates situations that a single beneficiary
+                    // (account) purhcases tokens through multiple times of
+                    // Ether transfers.
+                    //
+                    // Whether a beneficiary (account) purchases the amount
+                    // of tokens through multiple times or at a time,
+                    // they and their rights should be treated alike.
+                    const chunkValue = web3.BigNumber.min(
+                        amount,
+                        web3.toWei(200, "finney")
+                    );
+                    await fund.sendTransaction({
+                        value: chunkValue,
+                        from: contributors[i],
+                    });
+                    amount = amount.minus(chunkValue);
                 }
-                await fund.sendTransaction({
-                    value: etherAmounts[i],
-                    from: contributors[i],
-                });
             }
             const intermediateBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));

@@ -108,8 +108,12 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         address _beneficiary,
         uint256 _tokenAmount
     ) internal {
-        beneficiaries.push(_beneficiary);
-        balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+        if (_tokenAmount > 0) {
+            if (balances[_beneficiary] <= 0) {
+                beneficiaries.push(_beneficiary);
+            }
+            balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+        }
     }
     /**
      * @dev Refund the given ether to a beneficiary.  It only can be called by
