@@ -16,8 +16,8 @@ This repository contains:
 
 - `CarryTokenCrowdsale` which declares the common base contract for token
   crowdsale and is based on [OpenZeppelin]'s [`CappedCrowdsale`][CappedCrowdsale]
-  & [WhitelistedCrowdsale][] contracts, to be used for the Carry token presale &
-  public sale,
+  & [`WhitelistedCrowdsale`][WhitelistedCrowdsale] contracts, to be used for
+  the Carry token presale & public sale,
 
 - `GradualDeliveryCrowdsale` which declares the base contract for token
   crowdsale that does not deliver tokens to a beneficiary immediately after
@@ -44,16 +44,9 @@ install them:
 
     npm install
 
-It is recommended to append *node_modules/.bin/* directory to `PATH` environment
-variable:
-
-    export PATH="$PATH:$(pwd)/node_modules/.bin/"
-
-Or you should prepend the path to `truffle` command every time.
-
 The following command compiles every contract in the repository:
 
-    truffle compile
+    npx truffle compile
 
 [Truffle]: http://truffleframework.com/
 
