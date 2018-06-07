@@ -172,9 +172,9 @@ multipleContracts(
                     from: contributors[i],
                 });
             }
-            const from = 2, to = 5;
-            const result = await fund.deliverTokensInRatioFromTo(
-                1, 2, from, to,
+            const startIndex = 2, endIndex = 5;
+            const result = await fund.deliverTokensInRatioOfRange(
+                1, 2, startIndex, endIndex,
                 {from: fundOwner}
             );
             const rate = await fund.rate();
@@ -183,13 +183,13 @@ multipleContracts(
                     $event: "TokenDelivered",
                     beneficiary: address,
                     tokenAmount: rate.mul(web3.toWei((i + 1) * 50, "finney")),
-                })).slice(from, to),
+                })).slice(startIndex, endIndex),
                 result
             );
             const finalBalances =
                 await Promise.all(contributors.map(c => token.balanceOf(c)));
             for (let i = 0; i < contributors.length; i++) {
-                if (from <= i && i < to) {
+                if (startIndex <= i && i < endIndex) {
                     assertEq(
                         rate.mul(web3.toWei(50, "finney")).mul(i + 1),
                         finalBalances[i].minus(initialBalances[i]),

@@ -70,29 +70,29 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
      * @dev It's mostly same to deliverTokensInRatio(), except it processes
      * only a particular range of the list of beneficiaries.
      */
-    function deliverTokensInRatioFromTo(
+    function deliverTokensInRatioOfRange(
         uint256 _numerator,
         uint256 _denominator,
-        uint _from,
-        uint _to
+        uint _startIndex,
+        uint _endIndex
     ) external onlyOwner {
-        require(_from < _to);
-        _deliverTokensInRatio(_numerator, _denominator, _from, _to);
+        require(_startIndex < _endIndex);
+        _deliverTokensInRatio(_numerator, _denominator, _startIndex, _endIndex);
     }
 
     function _deliverTokensInRatio(
         uint256 _numerator,
         uint256 _denominator,
-        uint _from,
-        uint _to
+        uint _startIndex,
+        uint _endIndex
     ) internal {
         require(_denominator > 0);
         require(_numerator <= _denominator);
-        uint to = _to;
-        if (to > beneficiaries.length) {
-            to = beneficiaries.length;
+        uint endIndex = _endIndex;
+        if (endIndex > beneficiaries.length) {
+            endIndex = beneficiaries.length;
         }
-        for (uint i = _from; i < to; i = i.add(1)) {
+        for (uint i = _startIndex; i < endIndex; i = i.add(1)) {
             address beneficiary = beneficiaries[i];
             uint256 balance = balances[beneficiary];
             if (balance > 0) {
