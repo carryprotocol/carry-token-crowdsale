@@ -23,7 +23,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 /**
  * @title GradualDeliveryCrowdsale
  * @dev Crowdsale that does not deliver tokens to a beneficiary immediately
- * after they has just purchased, but instead partially delivers tokens through
+ * after they have just purchased, but instead partially delivers tokens through
  * several times when the contract owner calls deliverTokenRatio() method.
  * Note that it also provides methods to selectively refund some purchases.
  */
