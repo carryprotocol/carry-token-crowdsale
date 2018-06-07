@@ -24,7 +24,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
  * @title GradualDeliveryCrowdsale
  * @dev Crowdsale that does not deliver tokens to a beneficiary immediately
  * after they have just purchased, but instead partially delivers tokens through
- * several times when the contract owner calls deliverTokenRatio() method.
+ * several times when the contract owner calls deliverTokensInRatio() method.
  * Note that it also provides methods to selectively refund some purchases.
  */
 contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
@@ -117,7 +117,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     }
     /**
      * @dev Refund the given ether to a beneficiary.  It only can be called by
-     * either the contract owner or the wallet (i.e. Crowdsale.wallet) address.
+     * either the contract owner or the wallet (i.e., Crowdsale.wallet) address.
      * The only amount of the ether sent together in a transaction is refunded.
      */
     function depositRefund(address _beneficiary) public payable {
@@ -149,7 +149,7 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
     }
 
     /**
-     * @dev Similar to receiverRefund() except that it cannot be called by
+     * @dev Similar to receiveRefund() except that it cannot be called by
      * even the contract owner, but only the beneficiary of the refund.
      * It also takes an additional parameter, a wallet address to receiver
      * the deposited (refunded) ethers.
