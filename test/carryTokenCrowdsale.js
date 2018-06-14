@@ -149,5 +149,23 @@ multipleContracts(
                 from: contributor,
             });
         });
+
+        it("should not receive ethers if it is paused", async () => {
+            const contributor = getAccount();
+            const fund = getFund();
+            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.pause({from: fundOwner});
+            await assertFail(
+                fund.sendTransaction({
+                    value: web3.toWei(100, "finney"),
+                    from: contributor,
+                })
+            );
+            await fund.unpause({from: fundOwner});
+            await fund.sendTransaction({
+                value: web3.toWei(100, "finney"),
+                from: contributor,
+            });
+        });
     }
 );

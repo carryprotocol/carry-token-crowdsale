@@ -17,6 +17,7 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/validation/WhitelistedCrowdsale.sol";
+import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CarryToken.sol";
 
@@ -25,7 +26,7 @@ import "./CarryToken.sol";
  * @dev The common base contract for both sales: the Carry token presale,
  * and the Carry token public crowdsale.
  */
-contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale {
+contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale, Pausable {
     using SafeMath for uint256;
 
     // Individual min and max purchases.
@@ -52,7 +53,7 @@ contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale {
     function _preValidatePurchase(
         address _beneficiary,
         uint256 _weiAmount
-    ) internal {
+    ) internal whenNotPaused {
         super._preValidatePurchase(_beneficiary, _weiAmount);
         uint256 contribution = contributions[_beneficiary];
         uint256 contributionAfterPurchase = contribution.add(_weiAmount);
