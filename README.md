@@ -83,7 +83,7 @@ follows <https://ropsten.infura.io/> base URL.
 Last of all, with `MNEMONIC` and `ACCESS_TOKEN` environment variables
 the following command deploys all contracts to the public testnet:
 
-    MNEMONIC="..." ACCESS_TOKEN="..." truffle deploy --network demo
+    MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
 
 You must be able to find transactions made by your account from
 [Etherscan][Ropsten].
