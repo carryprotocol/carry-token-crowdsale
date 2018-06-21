@@ -15,10 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.23;
 
+import "openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
 
-contract CarryToken is PausableToken, CappedToken {
+contract CarryToken is PausableToken, CappedToken, BurnableToken {
     string public name = "CarryToken";
     string public symbol = "CRE";
     uint8 public decimals = 18;

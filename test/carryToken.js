@@ -17,7 +17,8 @@ const { assertEq, assertFail } = require("./utils");
 
 const CarryToken = artifacts.require("CarryToken");
 
-contract("CarryToken", ([sender, receiver]) => {
+contract("CarryToken", (accounts) => {
+    const [sender, receiver] = accounts;
     let instance;
     let decimals;
 
@@ -87,6 +88,38 @@ contract("CarryToken", ([sender, receiver]) => {
             receiverPrevBalance,
             await instance.balanceOf.call(receiver),
             "Amount must not be sent to the receiver"
+        );
+    });
+
+    it("can be burned by token owners", async () => {
+        const owner = sender;
+        const prevTotal = await instance.totalSupply.call();
+        const prevBalance = await instance.balanceOf.call(owner);
+        await assertFail(
+            instance.burn(prevBalance.plus(1), {from: owner}),
+            "One can burn the only amount they own at most."
+        );
+        assertEq(
+            prevTotal,
+            await instance.totalSupply.call(),
+            "Total supply should not be changed."
+        );
+        assertEq(
+            prevBalance,
+            await instance.balanceOf.call(owner),
+            "The balance should not be changed."
+        );
+        const burningAmount = prevBalance.div(2);
+        await instance.burn(burningAmount, {from: owner});
+        assertEq(
+            prevTotal.minus(burningAmount),
+            await instance.totalSupply.call(),
+            "The burned amount should be substracted from the total supply."
+        );
+        assertEq(
+            prevBalance.minus(burningAmount),
+            await instance.balanceOf.call(owner),
+            "The burned amount should be subtracted from the balance."
         );
     });
 });
