@@ -19,6 +19,7 @@
 const deasync = require("deasync");
 const http = require("http");
 const HDWalletProvider = require("truffle-hdwallet-provider");
+const HDWalletProviderPrivkey = require("truffle-hdwallet-provider-privkey");
 
 const networks = {};
 const networkCandidates = {
@@ -34,20 +35,28 @@ const networkCandidates = {
         provider: () => {
             const {
                 MNEMONIC: mnemonic,
+                PRIVATE_KEY: privateKey,
                 ACCESS_TOKEN: accessToken,
             } = process.env;
-            if (mnemonic == null) {
-                throw new Error("Missing environment variable: MNEMONIC");
+            if (mnemonic == null && privateKey == null) {
+                throw new Error(
+                    "Missing environment variable: MNEMONIC or PRIVATE_KEY"
+                );
+            } else if (mnemonic != null && privateKey != null) {
+                throw new Error(
+                    "MNEMONIC & PRIVATE_KEY are mutually exclusive"
+                );
             } else if (accessToken == null) {
                 throw new Error(
                     "Missing environment variable: ACCESS_TOKEN\n" +
                     "e.g., XYZ from https://ropsten.infura.io/XYZ"
                 );
             }
-            return new HDWalletProvider(
-                mnemonic,
-                "https://ropsten.infura.io/" + accessToken
-            );
+            const url = "https://ropsten.infura.io/" + accessToken;
+            if (mnemonic != null) {
+                return new HDWalletProvider(mnemonic, url);
+            }
+            return new HDWalletProviderPrivkey(privateKey.toLowerCase(), url);
         },
         gas: 2900000,
         network_id: 3
