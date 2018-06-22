@@ -5,6 +5,10 @@ function multipleContracts(contracts, callback) {
         const CarryToken = artifacts.require("CarryToken");
         const Contract = artifacts.require(contractName);
 
+        Contract.defaults({
+            gasPrice: 40000000000,  // 40 gwei
+        });
+
         contract(contractName, async function (accounts) {
             const reservedAccounts = 1;
             let accountIndex = reservedAccounts;

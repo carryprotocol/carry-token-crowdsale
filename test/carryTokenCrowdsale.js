@@ -167,5 +167,20 @@ multipleContracts(
                 from: contributor,
             });
         });
+
+        it("rejects TXes paying more than 40 gwei for gas price", async () => {
+            const maxGasPrice = new web3.BigNumber(web3.toWei(40, "gwei"));
+            const contributor = getAccount();
+            const fund = getFund();
+            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await assertFail(
+                fund.sendTransaction({
+                    value: web3.toWei(100, "finney"),
+                    from: contributor,
+                    gasPrice: maxGasPrice.plus(1),
+                }),
+                "The TX paying more than 40 gwei for gas price should fail."
+            );
+        });
     }
 );
