@@ -85,6 +85,10 @@ the following command deploys all contracts to the public testnet:
 
     MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
 
+Alternatively, raw `PRIVATE_KEY` can be used instead of `MNEMONIC`:
+
+    PRIVATE_KEY="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+
 You must be able to find transactions made by your account from
 [Etherscan][Ropsten].
 
