@@ -16,5 +16,10 @@
 const Migrations = artifacts.require("./Migrations.sol");
 
 module.exports = (deployer) => {
-    return deployer.deploy(Migrations);
+    let delay = 0;
+    if ((process.env.DELAY_SECONDS || "").match(/^\d+$/)) {
+        delay = process.env.DELAY_SECONDS * 1000;
+    }
+    return deployer.deploy(Migrations)
+        .then(c => new Promise(resolve => setTimeout(() => resolve(c), delay)));
 };

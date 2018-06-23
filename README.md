@@ -99,6 +99,13 @@ its corresponding private part.
 
     TOKEN_OWNER="..." MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
 
+[Since Infura has a load balancer in front of their nodes, the deployment
+transactions can be intermittently falling out of sync.][3]  In order to
+work around this problem, `DELAY_SECONDS` environment variable can configure
+the interval to delay between transactions:
+
+    DELAY_SECONDS=60 MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+
 You must be able to find transactions made by your account from
 [Etherscan][Ropsten].
 
@@ -107,6 +114,7 @@ You must be able to find transactions made by your account from
 [Geth]: https://github.com/ethereum/go-ethereum
 [1]: http://faucet.ropsten.be:3001/
 [2]: https://faucet.bitfwd.xyz/
+[3]: https://github.com/trufflesuite/truffle-migrate/issues/29
 
 
 License
