@@ -40,6 +40,10 @@ const presale = {
 };
 
 module.exports = (deployer, network, accounts) => {
+    let delay = 0;
+    if ((process.env.DELAY_SECONDS || "").match(/^\d+$/)) {
+        delay = process.env.DELAY_SECONDS * 1000;
+    }
     const tokenOwner =
         process.env.TOKEN_OWNER
             ? process.env.TOKEN_OWNER.toLowerCase()
@@ -51,7 +55,9 @@ module.exports = (deployer, network, accounts) => {
         );
     }
     let carryToken;
-    deployer.deploy(CarryToken, { from: tokenOwner }).then(() => {
+    deployer.deploy(CarryToken, { from: tokenOwner }).then(c => {
+        return new Promise(resolve => setTimeout(() => resolve(c), delay));
+    }).then(() => {
         return CarryToken.deployed();
     }).then((_carryToken) => {
         carryToken = _carryToken;
@@ -64,6 +70,8 @@ module.exports = (deployer, network, accounts) => {
             presale.individualMinPurchaseWei,
             presale.individualMaxCapWei
         );
+    }).then(c => {
+        return new Promise(resolve => setTimeout(() => resolve(c), delay));
     }).then(() => {
         return CarryTokenPresale.deployed();
     }).then((carryTokenPresale) => {
@@ -72,5 +80,7 @@ module.exports = (deployer, network, accounts) => {
             new web3.BigNumber(presale.cap).mul(presale.rate),
             {from: tokenOwner}
         );
+    }).then(c => {
+        return new Promise(resolve => setTimeout(() => resolve(c), delay));
     });
 };
