@@ -28,7 +28,7 @@
     "solium": "^1.1.6",
     "truffle": "^4.1.7",
     "truffle-hdwallet-provider": "0.0.3",
-    "truffle-hdwallet-provider-privkey": "^0.2.0"
+    "truffle-hdwallet-provider-privkey": "https://github.com/rhlsthrm/truffle-hdwallet-provider-privkey/archive/c226346761ea0dac05d59824cb0a6bd785022e55.tar.gz"
   },
   "private": true
 }
