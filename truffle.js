@@ -35,14 +35,14 @@ const networkCandidates = {
         provider: () => {
             const {
                 MNEMONIC: mnemonic,
-                PRIVATE_KEY: privateKey,
+                PRIVATE_KEY: privateKeys,
                 ACCESS_TOKEN: accessToken,
             } = process.env;
-            if (mnemonic == null && privateKey == null) {
+            if (mnemonic == null && privateKeys == null) {
                 throw new Error(
                     "Missing environment variable: MNEMONIC or PRIVATE_KEY"
                 );
-            } else if (mnemonic != null && privateKey != null) {
+            } else if (mnemonic != null && privateKeys != null) {
                 throw new Error(
                     "MNEMONIC & PRIVATE_KEY are mutually exclusive"
                 );
@@ -56,7 +56,17 @@ const networkCandidates = {
             if (mnemonic != null) {
                 return new HDWalletProvider(mnemonic, url);
             }
-            return new HDWalletProviderPrivkey(privateKey.toLowerCase(), url);
+            const privateKeyArray = privateKeys
+                .trim().split(/\s+/g)
+                .map(k => {
+                    if (!k.match(/^[0-9a-f]+$/i)) {
+                        throw new Error(
+                            "Invalid private key: " + k
+                        );
+                    }
+                    return k.toLowerCase();
+                });
+            return new HDWalletProviderPrivkey(privateKeyArray, url);
         },
         gas: 2900000,
         network_id: 3
