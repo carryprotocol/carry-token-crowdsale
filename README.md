@@ -92,6 +92,13 @@ Alternatively, raw `PRIVATE_KEY` can be used instead of `MNEMONIC`:
 Note that `PRIVATE_KEY` can contain multiple private keys separated by
 whitespace.
 
+In order to deploy the `CarryToken` contract using a different owner account,
+configure `TOKEN_OWNER` environment variable.  It has to be a public key of
+the owner account, and either `MNEMONIC` or `PRIVATE_KEY` have to contain
+its corresponding private part.
+
+    TOKEN_OWNER="..." MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+
 You must be able to find transactions made by your account from
 [Etherscan][Ropsten].
 

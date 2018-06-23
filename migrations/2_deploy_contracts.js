@@ -40,8 +40,18 @@ const presale = {
 };
 
 module.exports = (deployer, network, accounts) => {
+    const tokenOwner =
+        process.env.TOKEN_OWNER
+            ? process.env.TOKEN_OWNER.toLowerCase()
+            : accounts[0];
+    if (!accounts.includes(tokenOwner)) {
+        throw new Error(
+            "No private key is available for the account " + tokenOwner +
+            "; available accounts are: " + accounts.join(", ")
+        );
+    }
     let carryToken;
-    deployer.deploy(CarryToken).then(() => {
+    deployer.deploy(CarryToken, { from: tokenOwner }).then(() => {
         return CarryToken.deployed();
     }).then((_carryToken) => {
         carryToken = _carryToken;
@@ -60,7 +70,7 @@ module.exports = (deployer, network, accounts) => {
         return carryToken.mint(
             carryTokenPresale.address,
             new web3.BigNumber(presale.cap).mul(presale.rate),
-            {from: accounts[0]}
+            {from: tokenOwner}
         );
     });
 };
