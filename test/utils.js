@@ -99,13 +99,18 @@ function assertEvents(expectedEvents, result) {
 
 async function assertFail(promise, message) {
     let failed = false;
+    let tx;
     try {
-        await promise;
+        tx = await promise;
     } catch (e) {
-        console.log("An expected error has caught: " + e.toString());
         failed = true;
+        tx = null;
     }
-    assert.isTrue(failed, message);
+    const txid = tx && tx.tx;
+    if (!failed) {
+        console.error("assertFail() fails; txid: " + txid);
+    }
+    assert.isTrue(failed, message + "\ntxid: " + txid);
 }
 
 module.exports = {
