@@ -15,14 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity ^0.4.23;
 
-import "./CarryTokenCrowdsale.sol";
+import "./CarryTokenPresaleBase.sol";
 import "./GradualDeliveryCrowdsale.sol";
 
 /**
  * @title CarryTokenPresale
  * @dev The Carry token presale contract.
  */
-contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
+contract CarryTokenPresale is CarryTokenPresaleBase, GradualDeliveryCrowdsale {
     using SafeMath for uint256;
 
     constructor(
@@ -32,7 +32,7 @@ contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
         uint256 _cap,
         uint256 _individualMinPurchaseWei,
         uint256 _individualMaxCapWei
-    ) public CarryTokenCrowdsale(
+    ) public CarryTokenPresaleBase(
         _wallet,
         _token,
         _rate,

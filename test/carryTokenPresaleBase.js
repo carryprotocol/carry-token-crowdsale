@@ -17,7 +17,7 @@ const { assertEq, assertFail, multipleContracts } = require("./utils");
 
 multipleContracts(
     {
-        "CarryTokenCrowdsale": (fundWallet, token) => [
+        "CarryTokenPresaleBase": (fundWallet, token) => [
             // Use the same arguments to the presale (though not necessarily).
             // See also presale constant on migrations/2_deploy_contracts.js
             // file.

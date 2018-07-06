@@ -14,10 +14,10 @@ This repository contains:
 - `CarryToken` contract which declares the **CRE** token based on
   [OpenZeppelin]'s [`CappedToken`][CappedToken] contract,
 
-- `CarryTokenCrowdsale` which declares the common base contract for token
-  crowdsale and is based on [OpenZeppelin]'s [`CappedCrowdsale`][CappedCrowdsale]
+- `CarryTokenPresaleBase` which declares the common base contract for token
+  presale and is based on [OpenZeppelin]'s [`CappedCrowdsale`][CappedCrowdsale]
   & [`WhitelistedCrowdsale`][WhitelistedCrowdsale] contracts, to be used for
-  the Carry token presale & public sale,
+  the Carry token presale,
 
 - `GradualDeliveryCrowdsale` which declares the base contract for token
   crowdsale that does not deliver tokens to a beneficiary immediately after
