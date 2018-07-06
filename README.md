@@ -83,11 +83,11 @@ follows <https://ropsten.infura.io/> base URL.
 Last of all, with `MNEMONIC` and `ACCESS_TOKEN` environment variables
 the following command deploys all contracts to the public testnet:
 
-    MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+    MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network ropsten
 
 Alternatively, raw `PRIVATE_KEY` can be used instead of `MNEMONIC`:
 
-    PRIVATE_KEY="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+    PRIVATE_KEY="..." ACCESS_TOKEN="..." npx truffle deploy --network ropsten
 
 Note that `PRIVATE_KEY` can contain multiple private keys separated by
 whitespace.
@@ -97,14 +97,14 @@ configure `TOKEN_OWNER` environment variable.  It has to be a public key of
 the owner account, and either `MNEMONIC` or `PRIVATE_KEY` have to contain
 its corresponding private part.
 
-    TOKEN_OWNER="..." MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+    TOKEN_OWNER="..." MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network ropsten
 
 [Since Infura has a load balancer in front of their nodes, the deployment
 transactions can be intermittently falling out of sync.][3]  In order to
 work around this problem, `DELAY_SECONDS` environment variable can configure
 the interval to delay between transactions:
 
-    DELAY_SECONDS=60 MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network demo
+    DELAY_SECONDS=120 MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network ropsten
 
 You must be able to find transactions made by your account from
 [Etherscan][Ropsten].
@@ -115,6 +115,15 @@ You must be able to find transactions made by your account from
 [1]: http://faucet.ropsten.be:3001/
 [2]: https://faucet.bitfwd.xyz/
 [3]: https://github.com/trufflesuite/truffle-migrate/issues/29
+
+
+Deploy to the public main network through [Infura]
+--------------------------------------------------
+
+It's almost the same to Ropsten, except that `--network ropsten` options in
+all commands have to be replaced by `--network mainnet`, e.g.:
+
+    MNEMONIC="..." ACCESS_TOKEN="..." npx truffle deploy --network mainnet
 
 
 License

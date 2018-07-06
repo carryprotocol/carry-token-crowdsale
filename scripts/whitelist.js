@@ -22,7 +22,7 @@ const CarryTokenPresale = artifacts.require("CarryTokenPresale");
 // 
 //     WHITELIST_FILE="..." \
 //     MNEMONIC="..." \
-//     npx truffle exec scripts/whitelist.js --network demo
+//     npx truffle exec scripts/whitelist.js --network ropsten
 //
 // See also Truffle's docs:
 //

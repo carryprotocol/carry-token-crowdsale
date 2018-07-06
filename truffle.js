@@ -21,6 +21,43 @@ const http = require("http");
 const HDWalletProvider = require("truffle-hdwallet-provider");
 const HDWalletProviderPrivkey = require("truffle-hdwallet-provider-privkey");
 
+function getProvider(baseUrl) {
+    const {
+        MNEMONIC: mnemonic,
+        PRIVATE_KEY: privateKeys,
+        ACCESS_TOKEN: accessToken,
+    } = process.env;
+    if (mnemonic == null && privateKeys == null) {
+        throw new Error(
+            "Missing environment variable: MNEMONIC or PRIVATE_KEY"
+        );
+    } else if (mnemonic != null && privateKeys != null) {
+        throw new Error(
+            "MNEMONIC & PRIVATE_KEY are mutually exclusive"
+        );
+    } else if (accessToken == null) {
+        throw new Error(
+            "Missing environment variable: ACCESS_TOKEN\n" +
+            "e.g., XYZ from https://ropsten.infura.io/XYZ"
+        );
+    }
+    const url = baseUrl + accessToken;
+    if (mnemonic != null) {
+        return new HDWalletProvider(mnemonic, url);
+    }
+    const privateKeyArray = privateKeys
+        .trim().split(/\s+/g)
+        .map(k => {
+            if (!k.match(/^[0-9a-f]+$/i)) {
+                throw new Error(
+                    "Invalid private key: " + k
+                );
+            }
+            return k.toLowerCase();
+        });
+    return new HDWalletProviderPrivkey(privateKeyArray, url);
+}
+
 const networks = {};
 const networkCandidates = {
     // ganache (local testnet)
@@ -31,45 +68,18 @@ const networkCandidates = {
     },
 
     // ropsten (public testnet)
-    demo: {
-        provider: () => {
-            const {
-                MNEMONIC: mnemonic,
-                PRIVATE_KEY: privateKeys,
-                ACCESS_TOKEN: accessToken,
-            } = process.env;
-            if (mnemonic == null && privateKeys == null) {
-                throw new Error(
-                    "Missing environment variable: MNEMONIC or PRIVATE_KEY"
-                );
-            } else if (mnemonic != null && privateKeys != null) {
-                throw new Error(
-                    "MNEMONIC & PRIVATE_KEY are mutually exclusive"
-                );
-            } else if (accessToken == null) {
-                throw new Error(
-                    "Missing environment variable: ACCESS_TOKEN\n" +
-                    "e.g., XYZ from https://ropsten.infura.io/XYZ"
-                );
-            }
-            const url = "https://ropsten.infura.io/" + accessToken;
-            if (mnemonic != null) {
-                return new HDWalletProvider(mnemonic, url);
-            }
-            const privateKeyArray = privateKeys
-                .trim().split(/\s+/g)
-                .map(k => {
-                    if (!k.match(/^[0-9a-f]+$/i)) {
-                        throw new Error(
-                            "Invalid private key: " + k
-                        );
-                    }
-                    return k.toLowerCase();
-                });
-            return new HDWalletProviderPrivkey(privateKeyArray, url);
-        },
+    ropsten: {
+        provider: () => getProvider("https://ropsten.infura.io/"),
         gas: 2900000,
         network_id: 3
+    },
+
+    // public mainnet
+    mainnet: {
+        provider: () => getProvider("https://mainnet.infura.io/"),
+        gas: 7500000,
+        gasPrice: "5500000000",
+        network_id: 1
     },
 };
 
