@@ -23,10 +23,7 @@ import "../contracts/GradualDeliveryCrowdsale.sol";
 // constructor, we need to define a concrete class inheriting it and having
 // its own constructor.
 contract SampleGradualDeliveryCrowdsale is GradualDeliveryCrowdsale {
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function SampleGradualDeliveryCrowdsale(
+    constructor(
         uint256 _rate,
         address _wallet,
         ERC20 _token

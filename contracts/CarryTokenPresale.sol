@@ -25,10 +25,7 @@ import "./GradualDeliveryCrowdsale.sol";
 contract CarryTokenPresale is CarryTokenCrowdsale, GradualDeliveryCrowdsale {
     using SafeMath for uint256;
 
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function CarryTokenPresale(
+    constructor(
         address _wallet,
         CarryToken _token,
         uint256 _rate,

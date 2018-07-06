@@ -23,10 +23,7 @@ contract Migrations {
         if (msg.sender == owner) _;
     }
 
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function Migrations() public {
+    constructor() public {
         owner = msg.sender;
     }
 
