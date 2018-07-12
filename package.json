@@ -24,9 +24,9 @@
   "dependencies": {
     "deasync": "^0.1.12",
     "eslint": "^4.19.1",
-    "openzeppelin-solidity": "1.9.0",
-    "solium": "^1.1.7",
-    "truffle": "^4.1.7",
+    "openzeppelin-solidity": "^1.11.0",
+    "solium": "^1.1.8",
+    "truffle": "^4.1.13",
     "truffle-hdwallet-provider": "0.0.3",
     "truffle-hdwallet-provider-privkey": "https://github.com/rhlsthrm/truffle-hdwallet-provider-privkey/archive/c226346761ea0dac05d59824cb0a6bd785022e55.tar.gz"
   },

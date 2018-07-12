@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/validation/WhitelistedCrowdsale.sol";
@@ -57,7 +57,10 @@ contract CarryTokenPresaleBase is WhitelistedCrowdsale, CappedCrowdsale, Pausabl
         uint256 _weiAmount
     ) internal whenNotPaused {
         // Prevent gas war among purchasers.
-        require(tx.gasprice <= maxGasPrice);
+        require(
+            tx.gasprice <= maxGasPrice,
+            "Gas price is too expensive. Don't be competitive."
+        );
 
         super._preValidatePurchase(_beneficiary, _weiAmount);
         uint256 contribution = contributions[_beneficiary];
@@ -67,9 +70,15 @@ contract CarryTokenPresaleBase is WhitelistedCrowdsale, CappedCrowdsale, Pausabl
         // then they can purchase once again with less than a minimum amount,
         // say 0.01 ETH, because they have already satisfied the minimum
         // purchase.
-        require(contributionAfterPurchase >= individualMinPurchaseWei);
+        require(
+            contributionAfterPurchase >= individualMinPurchaseWei,
+            "Sent ethers is not enough."
+        );
 
-        require(contributionAfterPurchase <= individualMaxCapWei);
+        require(
+            contributionAfterPurchase <= individualMaxCapWei,
+            "Total ethers you've purchased is too much."
+        );
     }
 
     function _updatePurchasingState(

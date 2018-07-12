@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -27,7 +27,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
  * several times when the contract owner calls deliverTokensInRatio() method.
  * Note that it also provides methods to selectively refund some purchases.
  */
-contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
+contract GradualDeliveryCrowdsale is Ownable, Crowdsale {
     using SafeMath for uint;
     using SafeMath for uint256;
 
@@ -76,7 +76,10 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         uint _startIndex,
         uint _endIndex
     ) external onlyOwner {
-        require(_startIndex < _endIndex);
+        require(
+            _startIndex < _endIndex,
+            "_startIndex must be less than _endIndex"
+        );
         _deliverTokensInRatio(_numerator, _denominator, _startIndex, _endIndex);
     }
 
@@ -86,8 +89,11 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
         uint _startIndex,
         uint _endIndex
     ) internal {
-        require(_denominator > 0);
-        require(_numerator <= _denominator);
+        require(_denominator > 0, "_denominator cannot be less than 1.");
+        require(
+            _numerator <= _denominator,
+            "_numerator cannot be greater than _denominator."
+        );
         uint endIndex = _endIndex;
         if (endIndex > beneficiaries.length) {
             endIndex = beneficiaries.length;
@@ -121,12 +127,21 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
      * The only amount of the ether sent together in a transaction is refunded.
      */
     function depositRefund(address _beneficiary) public payable {
-        require(msg.sender == owner || msg.sender == wallet);
+        require(
+            msg.sender == owner || msg.sender == wallet,
+            "No permission to access."
+        );
         uint256 weiToRefund = msg.value;
-        require(weiToRefund <= weiRaised);
+        require(
+            weiToRefund <= weiRaised,
+            "Sent ethers is higher than even the total raised ethers."
+        );
         uint256 tokensToRefund = _getTokenAmount(weiToRefund);
         uint256 tokenBalance = balances[_beneficiary];
-        require(tokenBalance >= tokensToRefund);
+        require(
+            tokenBalance >= tokensToRefund,
+            "Sent ethers is higher than the ethers _beneficiary has purchased."
+        );
         weiRaised = weiRaised.sub(weiToRefund);
         balances[_beneficiary] = tokenBalance.sub(tokensToRefund);
         refundedDeposits[_beneficiary] = refundedDeposits[_beneficiary].add(
@@ -144,7 +159,10 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
      * depositRefund() is called.
      */
     function receiveRefund(address _beneficiary) public {
-        require(msg.sender == owner || msg.sender == _beneficiary);
+        require(
+            msg.sender == owner || msg.sender == _beneficiary,
+            "No permission to access."
+        );
         _transferRefund(_beneficiary, _beneficiary);
     }
 
@@ -163,13 +181,13 @@ contract GradualDeliveryCrowdsale is Crowdsale, Ownable {
      * wallet address by calling this method.
      */
     function receiveRefundTo(address _beneficiary, address _wallet) public {
-        require(msg.sender == _beneficiary);
+        require(msg.sender == _beneficiary, "No permission to access.");
         _transferRefund(_beneficiary, _wallet);
     }
 
     function _transferRefund(address _beneficiary, address _wallet) internal {
         uint256 depositedWeiAmount = refundedDeposits[_beneficiary];
-        require(depositedWeiAmount > 0);
+        require(depositedWeiAmount > 0, "_beneficiary has never purchased.");
         refundedDeposits[_beneficiary] = 0;
         _wallet.transfer(depositedWeiAmount);
         emit Refunded(_beneficiary, _wallet, depositedWeiAmount);

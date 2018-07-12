@@ -112,7 +112,7 @@ async function updateWhitelist(
         console.info("The first address of this chunk: " + addresses[0]);
         console.info("Gas limit: " + gasLimit);
         try {
-            await contract.addManyToWhitelist(addresses, {
+            await contract.addAddressesToWhitelist(addresses, {
                 gas: gasLimit,
                 gasPrice: web3.toWei(gasPriceGwei, "gwei"),
             });
@@ -129,7 +129,7 @@ async function updateWhitelist(
                     console.info("Failed due to nonce mismatch; retry...");
                 }
                 try {
-                    await contract.addManyToWhitelist(addresses, {
+                    await contract.addAddressesToWhitelist(addresses, {
                         gas: gasLimit,
                         gasPrice: web3.toWei(gasPriceGwei * multiply, "gwei"),
                     });

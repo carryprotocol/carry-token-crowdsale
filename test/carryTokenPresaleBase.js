@@ -84,7 +84,9 @@ multipleContracts(
         withoutBalanceChangeIt(
             "should not receive less than individualMinPurchaseWei",
             async (contributor) => {
-                await getFund().addToWhitelist(contributor, {from: fundOwner});
+                await getFund().addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 return await getFund().individualMinPurchaseWei();
             },
             async (contributor, individualMinPurchaseWei) => {
@@ -101,7 +103,9 @@ multipleContracts(
         withoutBalanceChangeIt(
             "should not receive more than individualMaxCapWei per contributor",
             async (contributor) => {
-                await getFund().addToWhitelist(contributor, {from: fundOwner});
+                await getFund().addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 return await getFund().individualMaxCapWei();
             },
             async (contributor, individualMaxCapWei) => {
@@ -120,7 +124,9 @@ multipleContracts(
             "per contributor",
             async (contributor) => {
                 const fund = getFund();
-                await fund.addToWhitelist(contributor, {from: fundOwner});
+                await fund.addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 const amount = web3.toWei(1, "ether");
                 await fund.sendTransaction({
                     value: amount,
@@ -143,7 +149,7 @@ multipleContracts(
         it("should receive if all conditions are satisfied", async () => {
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await fund.sendTransaction({
                 value: web3.toWei(100, "finney"),
                 from: contributor,
@@ -153,7 +159,7 @@ multipleContracts(
         it("should not receive ethers if it is paused", async () => {
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await fund.pause({from: fundOwner});
             await assertFail(
                 fund.sendTransaction({
@@ -172,7 +178,7 @@ multipleContracts(
             const maxGasPrice = new web3.BigNumber(web3.toWei(40, "gwei"));
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await assertFail(
                 fund.sendTransaction({
                     value: web3.toWei(100, "finney"),
