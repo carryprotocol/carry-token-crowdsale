@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-const { assertEq, assertFail, multipleContracts } = require("./utils");
+const { assertFail, multipleContracts } = require("./utils");
 
 multipleContracts(
     {
@@ -40,34 +40,7 @@ multipleContracts(
             web3.toWei(50, "ether"),  // individualMaxCapWei
         ],
     },
-    async function ({ getAccount, fundWallet, fundOwner, getFund }) {
-        function withoutBalanceChangeIt (label, fA, fB) {
-            it(label, async () => {
-                const pre = fB ? fA : async () => null;
-                const test = fB ? fB : fA;
-                const contributor = getAccount();
-
-                // pre() runs before "previous" balances are captured.
-                const state = await pre(contributor);
-
-                const prevContributorBalance = web3.eth.getBalance(contributor);
-                const prevFundWalletBalance = web3.eth.getBalance(fundWallet);
-                await test(contributor, state);
-                assert(
-                    prevContributorBalance.sub(
-                        web3.eth.getBalance(contributor)
-                    ).lt(web3.toWei(5, "finney")),
-                    "Amount must not be taken from the contributor [" +
-                    contributor + "] (except of gas fee)"
-                );
-                assertEq(
-                    prevFundWalletBalance,
-                    web3.eth.getBalance(fundWallet),
-                    "Amount must not be sent to the fund [" + fundWallet + "]"
-                );
-            });
-        }
-
+    async function ({ getAccount, fundOwner, getFund, withoutBalanceChangeIt }) {
         withoutBalanceChangeIt(
             "should not receive ETH from address not whitelisted",
             async (contributor) => {

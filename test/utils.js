@@ -52,6 +52,36 @@ function multipleContracts(contracts, callback) {
                 }
             });
 
+            function withoutBalanceChangeIt (label, fA, fB) {
+                it(label, async () => {
+                    const pre = fB ? fA : async () => null;
+                    const test = fB ? fB : fA;
+                    const contributor = getAccount();
+
+                    // pre() runs before "previous" balances are captured.
+                    const state = await pre(contributor);
+
+                    const prevContributorBalance =
+                        web3.eth.getBalance(contributor);
+                    const prevFundWalletBalance =
+                        web3.eth.getBalance(fundWallet);
+                    await test(contributor, state);
+                    assert(
+                        prevContributorBalance.sub(
+                            web3.eth.getBalance(contributor)
+                        ).lt(web3.toWei(5, "finney")),
+                        "Amount must not be taken from the contributor [" +
+                        contributor + "] (except of gas fee)"
+                    );
+                    assertEq(
+                        prevFundWalletBalance,
+                        web3.eth.getBalance(fundWallet),
+                        "Amount must not be sent to the fund [" +
+                        fundWallet + "]"
+                    );
+                });
+            }
+
             callback({
                 contractName: contractName,
                 accounts,
@@ -61,6 +91,7 @@ function multipleContracts(contracts, callback) {
                 getFund: () => fund,
                 getToken: () => token,
                 createFund: createFund,
+                withoutBalanceChangeIt,
             });
         });
     }
