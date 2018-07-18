@@ -28,6 +28,8 @@ import "./CarryToken.sol";
 contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     using SafeMath for uint256;
 
+    uint256 constant maxGasPrice = 40000000000;  // 40 gwei
+
     // Individual min purchases.
     uint256 public individualMinPurchaseWei;
 
@@ -91,6 +93,12 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         address _beneficiary,
         uint256 _weiAmount
     ) internal whenNotPaused {
+        // Prevent gas war among purchasers.
+        require(
+            tx.gasprice <= maxGasPrice,
+            "Gas price is too expensive. Don't be competitive."
+        );
+
         super._preValidatePurchase(_beneficiary, _weiAmount);
 
         // Tokensale is closed after closingTime.
