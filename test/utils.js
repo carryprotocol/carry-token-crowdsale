@@ -1,15 +1,16 @@
 /* eslint-disable no-console */
 
 function multipleContracts(contracts, callback) {
-    for (const [contractName, initArgs] of Object.entries(contracts)) {
+    for (const [testName, initArgs] of Object.entries(contracts)) {
         const CarryToken = artifacts.require("CarryToken");
+        const [contractName] = testName.trim().split(/\s+/);
         const Contract = artifacts.require(contractName);
 
         Contract.defaults({
             gasPrice: 40000000000,  // 40 gwei
         });
 
-        contract(contractName, async function (accounts) {
+        contract(testName, async function (accounts) {
             const reservedAccounts = 1;
             let accountIndex = reservedAccounts;
             const getAccount = () => {
@@ -83,7 +84,8 @@ function multipleContracts(contracts, callback) {
             }
 
             callback({
-                contractName: contractName,
+                testName,
+                contractName,
                 accounts,
                 getAccount,
                 fundWallet,
