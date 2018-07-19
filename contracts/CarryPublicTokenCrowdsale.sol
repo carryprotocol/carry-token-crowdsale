@@ -21,9 +21,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CarryToken.sol";
 
 /**
- * @title CarryTokenCrowdsale
- * @dev The common base contract for both sales: the Carry token presale,
- * and the Carry token public crowdsale.
+ * @title CarryPublicTokenCrowdsale
+ * @dev The Carry token public sale contract.
  */
 contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     using SafeMath for uint256;
