@@ -45,7 +45,7 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     //
     // Where individualMaxCaps = [
     //   IndividualMaxCap(1533081600, 5 ether),
-    //   IndividualMaxCap(1533686400, 10 ehter)
+    //   IndividualMaxCap(1533686400, 10 ether)
     // ]
     // If a transaction is made before 1533081600 (2018-08-01 sharp UTC)
     // it disallows any purchase.
