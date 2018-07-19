@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/CappedToken.sol";
@@ -28,9 +28,6 @@ contract CarryToken is PausableToken, CappedToken, BurnableToken {
     //                10 billion <---------|   |-----------------> 10^18
     uint256 constant TOTAL_CAP = 10000000000 * 1000000000000000000;
 
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function CarryToken() public CappedToken(TOTAL_CAP) {
+    constructor() public CappedToken(TOTAL_CAP) {
     }
 }

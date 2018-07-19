@@ -1,15 +1,16 @@
 /* eslint-disable no-console */
 
 function multipleContracts(contracts, callback) {
-    for (const [contractName, initArgs] of Object.entries(contracts)) {
+    for (const [testName, initArgs] of Object.entries(contracts)) {
         const CarryToken = artifacts.require("CarryToken");
+        const [contractName] = testName.trim().split(/\s+/);
         const Contract = artifacts.require(contractName);
 
         Contract.defaults({
             gasPrice: 40000000000,  // 40 gwei
         });
 
-        contract(contractName, async function (accounts) {
+        contract(testName, async function (accounts) {
             const reservedAccounts = 1;
             let accountIndex = reservedAccounts;
             const getAccount = () => {
@@ -52,8 +53,39 @@ function multipleContracts(contracts, callback) {
                 }
             });
 
+            function withoutBalanceChangeIt (label, fA, fB) {
+                it(label, async () => {
+                    const pre = fB ? fA : async () => null;
+                    const test = fB ? fB : fA;
+                    const contributor = getAccount();
+
+                    // pre() runs before "previous" balances are captured.
+                    const state = await pre(contributor);
+
+                    const prevContributorBalance =
+                        web3.eth.getBalance(contributor);
+                    const prevFundWalletBalance =
+                        web3.eth.getBalance(fundWallet);
+                    await test(contributor, state);
+                    assert(
+                        prevContributorBalance.sub(
+                            web3.eth.getBalance(contributor)
+                        ).lt(web3.toWei(5, "finney")),
+                        "Amount must not be taken from the contributor [" +
+                        contributor + "] (except of gas fee)"
+                    );
+                    assertEq(
+                        prevFundWalletBalance,
+                        web3.eth.getBalance(fundWallet),
+                        "Amount must not be sent to the fund [" +
+                        fundWallet + "]"
+                    );
+                });
+            }
+
             callback({
-                contractName: contractName,
+                testName,
+                contractName,
                 accounts,
                 getAccount,
                 fundWallet,
@@ -61,6 +93,7 @@ function multipleContracts(contracts, callback) {
                 getFund: () => fund,
                 getToken: () => token,
                 createFund: createFund,
+                withoutBalanceChangeIt,
             });
         });
     }
@@ -99,13 +132,18 @@ function assertEvents(expectedEvents, result) {
 
 async function assertFail(promise, message) {
     let failed = false;
+    let tx;
     try {
-        await promise;
+        tx = await promise;
     } catch (e) {
-        console.log("An expected error has caught: " + e.toString());
         failed = true;
+        tx = null;
     }
-    assert.isTrue(failed, message);
+    const txid = tx && tx.tx;
+    if (!failed) {
+        console.error("assertFail() fails; txid: " + txid);
+    }
+    assert.isTrue(failed, message + "\ntxid: " + txid);
 }
 
 module.exports = {

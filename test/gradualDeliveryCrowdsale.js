@@ -52,7 +52,7 @@ multipleContracts(
         async function addToWhitelist(...contributors) {
             if (contractName === "CarryTokenPresale") {
                 const fund = getFund();
-                await fund.addManyToWhitelist(
+                await fund.addAddressesToWhitelist(
                     contributors,
                     {from: fundOwner}
                 );

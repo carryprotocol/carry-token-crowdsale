@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/validation/WhitelistedCrowdsale.sol";
@@ -22,11 +22,14 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CarryToken.sol";
 
 /**
- * @title CarryTokenCrowdsale
- * @dev The common base contract for both sales: the Carry token presale,
- * and the Carry token public crowdsale.
+ * @title CarryTokenPresaleCrowdsale
+ * @dev The base contract for the Carry token presale.  (Note that it was
+ * intended to be an abstract base contract for common things between
+ * the token presale and the public token crowdsale both, but since
+ * we decided to change the policy for the public crowdsale, so there is no
+ * much common things between both.)
  */
-contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale, Pausable {
+contract CarryTokenPresaleBase is WhitelistedCrowdsale, CappedCrowdsale, Pausable {
     using SafeMath for uint256;
 
     uint256 constant maxGasPrice = 40000000000;  // 40 gwei
@@ -37,10 +40,7 @@ contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale, Pausable 
 
     mapping(address => uint256) public contributions;
 
-    // FIXME: Here we've wanted to use constructor() keyword instead,
-    // but solium/solhint lint softwares don't parse it properly as of
-    // April 2018.
-    function CarryTokenCrowdsale(
+    constructor(
         address _wallet,
         CarryToken _token,
         uint256 _rate,
@@ -57,7 +57,10 @@ contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale, Pausable 
         uint256 _weiAmount
     ) internal whenNotPaused {
         // Prevent gas war among purchasers.
-        require(tx.gasprice <= maxGasPrice);
+        require(
+            tx.gasprice <= maxGasPrice,
+            "Gas price is too expensive. Don't be competitive."
+        );
 
         super._preValidatePurchase(_beneficiary, _weiAmount);
         uint256 contribution = contributions[_beneficiary];
@@ -67,9 +70,15 @@ contract CarryTokenCrowdsale is WhitelistedCrowdsale, CappedCrowdsale, Pausable 
         // then they can purchase once again with less than a minimum amount,
         // say 0.01 ETH, because they have already satisfied the minimum
         // purchase.
-        require(contributionAfterPurchase >= individualMinPurchaseWei);
+        require(
+            contributionAfterPurchase >= individualMinPurchaseWei,
+            "Sent ethers is not enough."
+        );
 
-        require(contributionAfterPurchase <= individualMaxCapWei);
+        require(
+            contributionAfterPurchase <= individualMaxCapWei,
+            "Total ethers you've purchased is too much."
+        );
     }
 
     function _updatePurchasingState(

@@ -13,11 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-const { assertEq, assertFail, multipleContracts } = require("./utils");
+const { assertFail, multipleContracts } = require("./utils");
 
 multipleContracts(
     {
-        "CarryTokenCrowdsale": (fundWallet, token) => [
+        "CarryTokenPresaleBase": (fundWallet, token) => [
             // Use the same arguments to the presale (though not necessarily).
             // See also presale constant on migrations/2_deploy_contracts.js
             // file.
@@ -40,34 +40,7 @@ multipleContracts(
             web3.toWei(50, "ether"),  // individualMaxCapWei
         ],
     },
-    async function ({ getAccount, fundWallet, fundOwner, getFund }) {
-        function withoutBalanceChangeIt (label, fA, fB) {
-            it(label, async () => {
-                const pre = fB ? fA : async () => null;
-                const test = fB ? fB : fA;
-                const contributor = getAccount();
-
-                // pre() runs before "previous" balances are captured.
-                const state = await pre(contributor);
-
-                const prevContributorBalance = web3.eth.getBalance(contributor);
-                const prevFundWalletBalance = web3.eth.getBalance(fundWallet);
-                await test(contributor, state);
-                assert(
-                    prevContributorBalance.sub(
-                        web3.eth.getBalance(contributor)
-                    ).lt(web3.toWei(5, "finney")),
-                    "Amount must not be taken from the contributor [" +
-                    contributor + "] (except of gas fee)"
-                );
-                assertEq(
-                    prevFundWalletBalance,
-                    web3.eth.getBalance(fundWallet),
-                    "Amount must not be sent to the fund [" + fundWallet + "]"
-                );
-            });
-        }
-
+    async function ({ getAccount, fundOwner, getFund, withoutBalanceChangeIt }) {
         withoutBalanceChangeIt(
             "should not receive ETH from address not whitelisted",
             async (contributor) => {
@@ -84,7 +57,9 @@ multipleContracts(
         withoutBalanceChangeIt(
             "should not receive less than individualMinPurchaseWei",
             async (contributor) => {
-                await getFund().addToWhitelist(contributor, {from: fundOwner});
+                await getFund().addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 return await getFund().individualMinPurchaseWei();
             },
             async (contributor, individualMinPurchaseWei) => {
@@ -101,7 +76,9 @@ multipleContracts(
         withoutBalanceChangeIt(
             "should not receive more than individualMaxCapWei per contributor",
             async (contributor) => {
-                await getFund().addToWhitelist(contributor, {from: fundOwner});
+                await getFund().addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 return await getFund().individualMaxCapWei();
             },
             async (contributor, individualMaxCapWei) => {
@@ -120,7 +97,9 @@ multipleContracts(
             "per contributor",
             async (contributor) => {
                 const fund = getFund();
-                await fund.addToWhitelist(contributor, {from: fundOwner});
+                await fund.addAddressToWhitelist(contributor, {
+                    from: fundOwner,
+                });
                 const amount = web3.toWei(1, "ether");
                 await fund.sendTransaction({
                     value: amount,
@@ -143,7 +122,7 @@ multipleContracts(
         it("should receive if all conditions are satisfied", async () => {
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await fund.sendTransaction({
                 value: web3.toWei(100, "finney"),
                 from: contributor,
@@ -153,7 +132,7 @@ multipleContracts(
         it("should not receive ethers if it is paused", async () => {
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await fund.pause({from: fundOwner});
             await assertFail(
                 fund.sendTransaction({
@@ -172,7 +151,7 @@ multipleContracts(
             const maxGasPrice = new web3.BigNumber(web3.toWei(40, "gwei"));
             const contributor = getAccount();
             const fund = getFund();
-            await fund.addToWhitelist(contributor, {from: fundOwner});
+            await fund.addAddressToWhitelist(contributor, {from: fundOwner});
             await assertFail(
                 fund.sendTransaction({
                     value: web3.toWei(100, "finney"),
