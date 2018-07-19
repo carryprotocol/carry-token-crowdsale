@@ -44,14 +44,14 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     // the corresponding cap at most.
     //
     // Where individualMaxCaps = [
-    //   IndividualMaxCap(1533081600000, 5 ether),
-    //   IndividualMaxCap(1533686400000, 10 ehter)
+    //   IndividualMaxCap(1533081600, 5 ether),
+    //   IndividualMaxCap(1533686400, 10 ehter)
     // ]
-    // If a transaction is made before 1533081600000 (2018-08-01 sharp UTC)
+    // If a transaction is made before 1533081600 (2018-08-01 sharp UTC)
     // it disallows any purchase.
-    // If a transaction is made between 1533081600000 (2018-08-01 sharp UTC)
-    // 1533686400000 (2018-08-15 sharp UTC) it takes 5 ethers at most.
-    // If a transaction is made after 1533686400000 (2018-08-15 sharp UTC)
+    // If a transaction is made between 1533081600 (2018-08-01 sharp UTC)
+    // 1533686400 (2018-08-15 sharp UTC) it takes 5 ethers at most.
+    // If a transaction is made after 1533686400 (2018-08-15 sharp UTC)
     // it takes 10 ethers at most.
     IndividualMaxCap[] public individualMaxCaps;
 

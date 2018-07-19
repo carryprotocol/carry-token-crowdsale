@@ -17,6 +17,10 @@ const CarryToken = artifacts.require("CarryToken");
 const CarryPublicTokenCrowdsale =
     artifacts.require("CarryPublicTokenCrowdsale");
 
+function timestamp(iso8601) {
+    return +new Date(iso8601) / 1000 >> 0;
+}
+
 const publicSale = {
     // See also <https://carryprotocol.io/#section-token-distribution>.
     //   1 ETH = 65,000 CRE
@@ -29,10 +33,10 @@ const publicSale = {
     cap: web3.toWei(5000410, "finney"),
 
     // Available time frame & individual caps
-    closingTime: +new Date("2018-08-15T20:00:00+09:00"),
+    closingTime: timestamp("2018-08-15T20:00:00+09:00"),
     individualMaxCaps: {
-        [+new Date("2018-08-01T20:00:00+09:00")]: web3.toWei(5, "ether"),
-        [+new Date("2018-08-03T20:00:00+09:00")]: web3.toWei(10, "ether"),
+        [timestamp("2018-08-01T20:00:00+09:00")]: web3.toWei(5, "ether"),
+        [timestamp("2018-08-03T20:00:00+09:00")]: web3.toWei(10, "ether"),
     },
     // Due to gas fee, contributors tend to transfer incorrect amount of
     // ETH which doesn't satisfy the minimum purchase by a whisker,
