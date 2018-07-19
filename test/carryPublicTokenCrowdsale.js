@@ -107,7 +107,7 @@ multipleContracts({
                 // TODO: We may need to add contributor to whitelist here
                 await assertFail(
                     fund.sendTransaction({
-                        value: web3.toWei(5, "finney"),
+                        value: web3.toWei(100, "finney"),
                         from: contributor,
                     })
                 );
