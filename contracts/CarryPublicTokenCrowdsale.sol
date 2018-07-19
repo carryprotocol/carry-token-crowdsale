@@ -50,8 +50,8 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     // If a transaction is made before 1533081600 (2018-08-01 sharp UTC)
     // it disallows any purchase.
     // If a transaction is made between 1533081600 (2018-08-01 sharp UTC)
-    // 1533686400 (2018-08-15 sharp UTC) it takes 5 ethers at most.
-    // If a transaction is made after 1533686400 (2018-08-15 sharp UTC)
+    // 1533686400 (2018-08-08 sharp UTC) it takes 5 ethers at most.
+    // If a transaction is made after 1533686400 (2018-08-08 sharp UTC)
     // it takes 10 ethers at most.
     IndividualMaxCap[] public individualMaxCaps;
 
