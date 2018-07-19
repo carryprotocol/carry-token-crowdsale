@@ -29,13 +29,14 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        currentTimestamp + 31 * day,  // closingTime: a month later
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
         [
             currentTimestamp + 14 * day,  // 2 weeks later
             web3.toWei(5, "ether"),
             currentTimestamp + 21 * day,  // 3 weeks later
             web3.toWei(10, "ether"),
+            currentTimestamp + 31 * day,  // closingTime: a month later
+            0,
         ],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 1)": (fundWallet, token) => [
@@ -46,13 +47,14 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        14 * day + currentTimestamp,  // closingTime: 2 weeks later
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
         [
             currentTimestamp - 7 * day,  // a week ago
             web3.toWei(5, "ether"),
             currentTimestamp + 7 * day,  // a week later
             web3.toWei(10, "ether"),
+            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
+            0,
         ],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 2)": (fundWallet, token) => [
@@ -63,13 +65,14 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        14 * day + currentTimestamp,  // closingTime: 2 weeks later
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
         [
             currentTimestamp - 14 * day,  // 2 weeks ago
             web3.toWei(5, "ether"),
             currentTimestamp - 7 * day,  // a week ago
             web3.toWei(10, "ether"),
+            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
+            0,
         ],
     ],
     "CarryPublicTokenCrowdsale (already closed)": (fundWallet, token) => [
@@ -80,13 +83,14 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        currentTimestamp - 7 * day,  // closingTime: a week ago
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
         [
             currentTimestamp - 31 * day,  // a month ago
             web3.toWei(5, "ether"),
             currentTimestamp - 14 * day,  // 2 weeks ago
             web3.toWei(10, "ether"),
+            currentTimestamp - 7 * day,  // closingTime: a week ago
+            0,
         ],
     ],
 }, ({ testName, getAccount, fundOwner, getFund, withoutBalanceChangeIt  }) => {

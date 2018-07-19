@@ -33,10 +33,10 @@ const publicSale = {
     cap: web3.toWei(5000410, "finney"),
 
     // Available time frame & individual caps
-    closingTime: timestamp("2018-08-15T20:00:00+09:00"),
     individualMaxCaps: {
         [timestamp("2018-08-01T20:00:00+09:00")]: web3.toWei(5, "ether"),
         [timestamp("2018-08-03T20:00:00+09:00")]: web3.toWei(10, "ether"),
+        [timestamp("2018-08-15T20:00:00+09:00")]: 0,  // closing time
     },
     // Due to gas fee, contributors tend to transfer incorrect amount of
     // ETH which doesn't satisfy the minimum purchase by a whisker,

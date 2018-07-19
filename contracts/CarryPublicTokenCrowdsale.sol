@@ -57,14 +57,11 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
 
     mapping(address => uint256) public contributions;
 
-    uint256 public closingTime;
-
     constructor(
         address _wallet,
         CarryToken _token,
         uint256 _rate,
         uint256 _cap,
-        uint256 _closingTime,
         uint256 _individualMinPurchaseWei,
 
         // Since Solidity currently doesn't allows parameters to take array of
@@ -77,7 +74,6 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
             _individualMaxCaps.length % 2 == 0,
             "The length of _individualMaxCaps has to be even, not odd."
         );
-        closingTime = _closingTime;
         individualMinPurchaseWei = _individualMinPurchaseWei;
         for (uint256 i = 0; i < _individualMaxCaps.length; i += 2) {
             individualMaxCaps.push(
@@ -100,13 +96,6 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         );
 
         super._preValidatePurchase(_beneficiary, _weiAmount);
-
-        // Tokensale is closed after closingTime.
-        require(
-            // solium-disable-next-line security/no-block-members
-            block.timestamp <= closingTime,
-            "Already closed; it's too late."
-        );
 
         uint256 contribution = contributions[_beneficiary];
         uint256 contributionAfterPurchase = contribution.add(_weiAmount);
@@ -133,7 +122,9 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         }
         require(
             contributionAfterPurchase <= individualMaxWei,
-            "Total ethers you've purchased is too much."
+            individualMaxWei > 0
+                ? "Total ethers you've purchased is too much."
+                : "Purchase is currently disallowed."
         );
     }
 
