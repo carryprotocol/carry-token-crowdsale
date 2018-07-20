@@ -56,11 +56,43 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
 
     mapping(address => uint256) public contributions;
 
+    // Each index represents the grade (the order is arbitrary) and its value
+    // represents a timestamp when people (i.e., addresses) belonging to that
+    // grade becomes available to purchase tokens.  Note that the first value
+    // (i.e., whitelistGrades[0]) must be zero since the index 0 must represent
+    // the state of "not whitelisted."
+    //
+    // The index numbers are used by the whitelist mapping (see below).
+    // As the key type of the whitelist mapping is uint8, there cannot be more
+    // than 2^8 grades.
+    uint256[] public whitelistGrades;
+
+    // This mapping represents what grade each address belongs to.  Values are
+    // an index number and refer to a grade (see the whitelistGrades array).
+    // A special value 0 represents the predefined state that "it is not
+    // whitelisted and does not belong to any grade."
+    //
+    // Where whitelistGrades = [0, 1533686400, 1533081600]
+    //   and whitelist = [X => 2, Y => 1, Z => 0]
+    //
+    // X cannot purchase any tokens until 1533081600 (2018-08-01 sharp UTC),
+    // but became to able to purchase tokens after that.
+    // Y cannot purchase any tokens until 1533686400 (2018-08-08 sharp
+    // UTC), but became to able to purchase tokens after that.
+    // Z cannot purchase any tokens since it is not whitelisted and does not
+    // belong to any grade.
+    //
+    // As values of a mapping in solidity are virtually all zeros by default,
+    // addresses never associated by the whitelist mapping are not whitelisted
+    // by default.
+    mapping(address => uint8) public whitelist;
+
     constructor(
         address _wallet,
         CarryToken _token,
         uint256 _rate,
         uint256 _cap,
+        uint256[] _whitelistGrades,
         uint256 _individualMinPurchaseWei,
 
         // Since Solidity currently doesn't allows parameters to take array of
@@ -73,6 +105,19 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
             _individualMaxCaps.length % 2 == 0,
             "The length of _individualMaxCaps has to be even, not odd."
         );
+        if (_whitelistGrades.length < 1) {
+            whitelistGrades = [0];
+        } else {
+            require(
+                _whitelistGrades.length < 0x100,
+                "The grade number must be less than 2^8."
+            );
+            require(
+                _whitelistGrades[0] == 0,
+                "The _whitelistGrades[0] must be zero."
+            );
+            whitelistGrades = _whitelistGrades;
+        }
         individualMinPurchaseWei = _individualMinPurchaseWei;
         for (uint256 i = 0; i < _individualMaxCaps.length; i += 2) {
             individualMaxCaps.push(
@@ -95,6 +140,15 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         );
 
         super._preValidatePurchase(_beneficiary, _weiAmount);
+
+        uint8 grade = whitelist[_beneficiary];
+        require(grade > 0, "Not whitelisted.");
+        uint openingTime = whitelistGrades[grade];
+        require(
+            // solium-disable-next-line security/no-block-members
+            block.timestamp >= openingTime,
+            "Currently unavailable to purchase tokens."
+        );
 
         uint256 contribution = contributions[_beneficiary];
         uint256 contributionAfterPurchase = contribution.add(_weiAmount);
@@ -135,5 +189,15 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         contributions[_beneficiary] = contributions[_beneficiary].add(
             _weiAmount
         );
+    }
+
+    function addAddressesToWhitelist(
+        address[] _beneficiaries,
+        uint8 _grade
+    ) external onlyOwner {
+        require(_grade < whitelistGrades.length, "No such grade number.");
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            whitelist[_beneficiaries[i]] = _grade;
+        }
     }
 }
