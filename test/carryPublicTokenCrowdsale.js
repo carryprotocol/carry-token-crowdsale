@@ -29,8 +29,9 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        [0, currentTimestamp + 14 * day],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [
+        [  // individualMaxCaps
             currentTimestamp + 14 * day,  // 2 weeks later
             web3.toWei(5, "ether"),
             currentTimestamp + 21 * day,  // 3 weeks later
@@ -47,8 +48,13 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        [  // whitelistGrades
+            0,
+            currentTimestamp - 7 * day,
+            currentTimestamp + 7 * day,
+        ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [
+        [  // individualMaxCaps
             currentTimestamp - 7 * day,  // a week ago
             web3.toWei(5, "ether"),
             currentTimestamp + 7 * day,  // a week later
@@ -65,8 +71,13 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        [  // whitelistGrades
+            0,
+            currentTimestamp - 14 * day,
+            currentTimestamp - 7 * day,
+        ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [
+        [  // individualMaxCaps
             currentTimestamp - 14 * day,  // 2 weeks ago
             web3.toWei(5, "ether"),
             currentTimestamp - 7 * day,  // a week ago
@@ -83,6 +94,7 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        [0, currentTimestamp - 31 * day],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
         [
             currentTimestamp - 31 * day,  // a month ago
@@ -98,13 +110,71 @@ multipleContracts({
     const phase2 = testName.indexOf("(opened; phase 2)") >= 0;
     const opened = phase1 || phase2;
 
+    it("disallows to add to whitelist from other than owner", async () => {
+        const contributor = getAccount();
+        const notOwner = getAccount();
+        await assertFail(
+            getFund().addAddressesToWhitelist([contributor], 1, {
+                from: notOwner,
+            })
+        );
+    });
+
+    it("disallows to add an address to an invalid grade", async () => {
+        const contributor = getAccount();
+        await assertFail(
+            getFund().addAddressesToWhitelist([contributor], 3, {
+                from: fundOwner,
+            })
+        );
+    });
+
+    withoutBalanceChangeIt(
+        "should not receive ETH from address not whitelisted",
+        async (contributor) => {
+            const fund = getFund();
+            await assertFail(
+                fund.sendTransaction({
+                    value: web3.toWei(1, "ether"),
+                    from: contributor,
+                }),
+                "Transfer should be failed"
+            );
+        }
+    );
+
+    if (phase1) {
+        withoutBalanceChangeIt(
+            "should not receive ETH from address belonging to a currently " +
+            "not opened grade",
+            async (contributor) => {
+                await getFund().addAddressesToWhitelist(
+                    [contributor],
+                    2,  // A grade which is not opened
+                    {from: fundOwner}
+                );
+            },
+            async (contributor) => {
+                await assertFail(
+                    getFund().sendTransaction({
+                        value: web3.toWei(1, "ether"),
+                        from: contributor,
+                    }),
+                    "Transfer should be failed"
+                );
+            }
+        );
+    }
+
     if (!opened) {
         it(
             "should not receive ethers if it's not opened yet or already closed",
             async () => {
                 const contributor = getAccount();
                 const fund = getFund();
-                // TODO: We may need to add contributor to whitelist here
+                await fund.addAddressesToWhitelist([contributor], 1, {
+                    from: fundOwner
+                });
                 await assertFail(
                     fund.sendTransaction({
                         value: web3.toWei(100, "finney"),
@@ -117,8 +187,10 @@ multipleContracts({
 
     withoutBalanceChangeIt(
         "should not receive less than individualMinPurchaseWei",
-        async () => {
-            // TODO: We may need to add contributor to whitelist here
+        async (contributor) => {
+            await getFund().addAddressesToWhitelist([contributor], 1, {
+                from: fundOwner
+            });
             return await getFund().individualMinPurchaseWei();
         },
         async (contributor, individualMinPurchaseWei) => {
@@ -138,8 +210,10 @@ multipleContracts({
 
         withoutBalanceChangeIt(
             "should not receive more than individual max cap per contributor",
-            async () => {
-                // TODO: We may need to add contributor to whitelist here
+            async (contributor) => {
+                await getFund().addAddressesToWhitelist([contributor], 1, {
+                    from: fundOwner
+                });
             },
             async (contributor) => {
                 await assertFail(
@@ -157,7 +231,9 @@ multipleContracts({
             "per contributor",
             async (contributor) => {
                 const fund = getFund();
-                // TODO: We may need to add contributor to whitelist here
+                await fund.addAddressesToWhitelist([contributor], 1, {
+                    from: fundOwner
+                });
                 const amount = web3.toWei(1, "ether");
                 await fund.sendTransaction({
                     value: amount,
@@ -179,7 +255,9 @@ multipleContracts({
         it("should receive if all conditions are satisfied", async () => {
             const contributor = getAccount();
             const fund = getFund();
-            // TODO: We may need to add contributor to whitelist here
+            await fund.addAddressesToWhitelist([contributor], 1, {
+                from: fundOwner
+            });
             await fund.sendTransaction({
                 value: web3.toWei(100, "finney"),
                 from: contributor,
@@ -194,7 +272,7 @@ multipleContracts({
     it("should not receive ethers if it is paused", async () => {
         const contributor = getAccount();
         const fund = getFund();
-        // TODO: We may need to add contributor to whitelist here
+        await fund.addAddressesToWhitelist([contributor], 1, {from: fundOwner});
         await fund.pause({from: fundOwner});
         await assertFail(
             fund.sendTransaction({
@@ -215,7 +293,7 @@ multipleContracts({
         const maxGasPrice = new web3.BigNumber(web3.toWei(40, "gwei"));
         const contributor = getAccount();
         const fund = getFund();
-        // TODO: We may need to add contributor to whitelist here
+        await fund.addAddressesToWhitelist([contributor], 1, {from: fundOwner});
         await assertFail(
             fund.sendTransaction({
                 value: web3.toWei(100, "finney"),

@@ -32,6 +32,13 @@ const publicSale = {
     // Max cap: 5000.41 ETH = 373,781,000 CRE
     cap: web3.toWei(5000410, "finney"),
 
+    // Whitelist grades and available time for each grades
+    whitelistGrades: [
+        0,  // This must be zero; means a special state of "not whitelisted."
+        timestamp("2018-08-03T20:00:00+09:00"),  // KYC passed
+        timestamp("2018-08-01T20:00:00+09:00"),  // KYC & quiz passed
+    ],
+
     // Available time frame & individual caps
     individualMaxCaps: {
         [timestamp("2018-08-01T20:00:00+09:00")]: web3.toWei(5, "ether"),
