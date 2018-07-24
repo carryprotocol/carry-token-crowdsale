@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-const { assertFail, multipleContracts } = require("./utils");
+const { assertEq, assertFail, multipleContracts } = require("./utils");
 
 const currentTimestamp = +new Date() / 1000 >> 0;
 const minute = 60;
@@ -105,7 +105,14 @@ multipleContracts({
             0,
         ],
     ],
-}, ({ testName, getAccount, fundOwner, getFund, withoutBalanceChangeIt  }) => {
+}, ({
+    testName,
+    getAccount,
+    getToken,
+    fundOwner,
+    getFund,
+    withoutBalanceChangeIt,
+}) => {
     const phase1 = testName.indexOf("(opened; phase 1)") >= 0;
     const phase2 = testName.indexOf("(opened; phase 2)") >= 0;
     const opened = phase1 || phase2;
@@ -252,7 +259,7 @@ multipleContracts({
             }
         );
 
-        it("should receive if all conditions are satisfied", async () => {
+        const purchaseTokenSuccessfully = async function () {
             const contributor = getAccount();
             const fund = getFund();
             await fund.addAddressesToWhitelist([contributor], 1, {
@@ -266,6 +273,42 @@ multipleContracts({
                 value: individualMaxCapWei.minus(web3.toWei(100, "finney")),
                 from: contributor,
             });
+            return contributor;
+        };
+
+        it(
+            "should receive if all conditions are satisfied",
+            purchaseTokenSuccessfully
+        );
+
+        it("does not immediately deliver tokens", async () => {
+            const contributor = await purchaseTokenSuccessfully();
+            assertEq(
+                0,
+                await getToken().balanceOf(contributor),
+                "Tokens should not be delivered immediately"
+            );
+        });
+
+        it("disallows to withdraw tokens by default", async () => {
+            const contributor = await purchaseTokenSuccessfully();
+            assertFail(
+                getFund().withdrawTokens({ from: contributor }),
+                "Withdrawal should be disallowed"
+            );
+        });
+
+        it("can be withdrawable by setWithdrawable()", async () => {
+            const contributor = await purchaseTokenSuccessfully();
+            const fund = getFund();
+            const rate = await fund.rate();
+            await fund.setWithdrawable(true, { from: fundOwner });
+            await fund.withdrawTokens({ from: contributor });
+            assertEq(
+                rate.mul(individualMaxCapWei),
+                await getToken().balanceOf(contributor),
+                "Tokens should be delivered"
+            );
         });
     }
 

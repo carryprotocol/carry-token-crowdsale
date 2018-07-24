@@ -87,6 +87,15 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     // by default.
     mapping(address => uint8) public whitelist;
 
+    // Token amounts people purchased.  Keys are an address and values are
+    // CRE tokens (in minor units).  If X purchased 5 CRE it is represented as
+    // [X => 5 * 10**18].
+    mapping(address => uint256) public balances;
+
+    // Whether to allow purchasers to withdraw their tokens.  Intended to be
+    // false at first, and then become true at some point.
+    bool public withdrawable;
+
     constructor(
         address _wallet,
         CarryToken _token,
@@ -199,5 +208,25 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         for (uint256 i = 0; i < _beneficiaries.length; i++) {
             whitelist[_beneficiaries[i]] = _grade;
         }
+    }
+
+    // Override to prevent immediate delivery of tokens.
+    function _processPurchase(
+        address _beneficiary,
+        uint256 _tokenAmount
+    ) internal {
+        balances[_beneficiary] = balances[_beneficiary].add(_tokenAmount);
+    }
+
+    function setWithdrawable(bool _withdrawable) external onlyOwner {
+        withdrawable = _withdrawable;
+    }
+
+    function withdrawTokens() public {
+        require(withdrawable, "Currently tokens cannot be withdrawn.");
+        uint256 amount = balances[msg.sender];
+        require(amount > 0, "No balance to withdraw.");
+        balances[msg.sender] = 0;
+        _deliverTokens(msg.sender, amount);
     }
 }
