@@ -92,7 +92,7 @@ function multipleContracts(contracts, callback) {
                 fundOwner,
                 getFund: () => fund,
                 getToken: () => token,
-                createFund: createFund,
+                createFund,
                 withoutBalanceChangeIt,
             });
         });

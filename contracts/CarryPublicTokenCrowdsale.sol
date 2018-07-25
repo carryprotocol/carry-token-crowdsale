@@ -96,6 +96,8 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     // false at first, and then become true at some point.
     bool public withdrawable;
 
+    mapping(address => uint256) public refundedDeposits;
+
     constructor(
         address _wallet,
         CarryToken _token,
@@ -228,5 +230,68 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         require(amount > 0, "No balance to withdraw.");
         balances[msg.sender] = 0;
         _deliverTokens(msg.sender, amount);
+    }
+
+    event RefundDeposited(
+        address indexed beneficiary,
+        uint256 tokenAmount,
+        uint256 weiAmount
+    );
+    event Refunded(
+        address indexed beneficiary,
+        address indexed receiver,
+        uint256 weiAmount
+    );
+
+    /**
+     * @dev Refund the given ether to a beneficiary.  It only can be called by
+     * either the contract owner or the wallet (i.e., Crowdsale.wallet) address.
+     * The only amount of the ether sent together in a transaction is refunded.
+     */
+    function depositRefund(address _beneficiary) public payable {
+        require(
+            msg.sender == owner || msg.sender == wallet,
+            "No permission to access."
+        );
+        uint256 weiToRefund = msg.value;
+        require(
+            weiToRefund <= weiRaised,
+            "Sent ethers is higher than even the total raised ethers."
+        );
+        uint256 tokensToRefund = _getTokenAmount(weiToRefund);
+        uint256 tokenBalance = balances[_beneficiary];
+        require(
+            tokenBalance >= tokensToRefund,
+            "Sent ethers is higher than the ethers _beneficiary has purchased."
+        );
+        weiRaised = weiRaised.sub(weiToRefund);
+        balances[_beneficiary] = tokenBalance.sub(tokensToRefund);
+        refundedDeposits[_beneficiary] = refundedDeposits[_beneficiary].add(
+            weiToRefund
+        );
+        emit RefundDeposited(_beneficiary, tokensToRefund, weiToRefund);
+    }
+
+    /**
+     * @dev Receive one's refunded ethers in the deposit.  It can be called by
+     * only a beneficiary of refunds.
+     * It takes a parameter, a wallet address to receive the deposited
+     * (refunded) ethers.  (Usually it would be the same to the beneficiary
+     * address unless the beneficiary address is a smart contract unable to
+     * receive ethers.)
+     */
+    function receiveRefund(address _wallet) public {
+        _transferRefund(msg.sender, _wallet);
+    }
+
+    function _transferRefund(address _beneficiary, address _wallet) internal {
+        uint256 depositedWeiAmount = refundedDeposits[_beneficiary];
+        require(depositedWeiAmount > 0, "_beneficiary has never purchased.");
+        refundedDeposits[_beneficiary] = 0;
+        contributions[_beneficiary] = contributions[_beneficiary].sub(
+            depositedWeiAmount
+        );
+        _wallet.transfer(depositedWeiAmount);
+        emit Refunded(_beneficiary, _wallet, depositedWeiAmount);
     }
 }
