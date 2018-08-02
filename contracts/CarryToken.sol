@@ -26,7 +26,7 @@ contract CarryToken is PausableToken, CappedToken, BurnableToken {
 
     // See also <https://carryprotocol.io/#section-token-distribution>.
     //                10 billion <---------|   |-----------------> 10^18
-    uint256 constant TOTAL_CAP = 10000000000 * 1000000000000000000;
+    uint256 constant TOTAL_CAP = 10000000000 * (10 ** uint256(decimals));
 
     constructor() public CappedToken(TOTAL_CAP) {
     }
