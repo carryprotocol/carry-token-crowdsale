@@ -20,10 +20,11 @@ const {
     multipleContracts,
 } = require("./utils");
 
-const currentTimestamp = +new Date() / 1000 >> 0;
+const now = +new Date() / 1000 >> 0;
 const minute = 60;
 const hour = 60 * minute;
 const day = 24 * hour;
+const week = 7 * day;
 
 multipleContracts({
     "CarryPublicTokenCrowdsale (not opened yet)": (fundWallet, token) => [
@@ -34,16 +35,12 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        [0, currentTimestamp + 14 * day],  // whitelistGrades
+        [0, now + 2 * week],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp + 14 * day,  // 2 weeks later
-            web3.toWei(5, "ether"),
-            currentTimestamp + 21 * day,  // 3 weeks later
-            web3.toWei(10, "ether"),
-            currentTimestamp + 31 * day,  // closingTime: a month later
-            0,
-        ],
+        // individual mas caps
+        // 2 weeks later         3 weeks later            closing: a month later
+        [now + 2 * week,         now + 3 * week,          now + 31 * day],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 1)": (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
@@ -55,18 +52,14 @@ multipleContracts({
         web3.toWei(5000410, "finney"),  // cap
         [  // whitelistGrades
             0,
-            currentTimestamp - 7 * day,
-            currentTimestamp + 7 * day,
+            now - week,
+            now + week,
         ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp - 7 * day,  // a week ago
-            web3.toWei(5, "ether"),
-            currentTimestamp + 7 * day,  // a week later
-            web3.toWei(10, "ether"),
-            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
-            0,
-        ],
+        // individual mas caps
+        // a week ago            a week later             closing: 2 weeks later
+        [now - week,             now + week,              now + 2 * week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 2)": (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
@@ -78,18 +71,14 @@ multipleContracts({
         web3.toWei(5000410, "finney"),  // cap
         [  // whitelistGrades
             0,
-            currentTimestamp - 14 * day,
-            currentTimestamp - 7 * day,
+            now - 2 * week,
+            now - week,
         ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp - 14 * day,  // 2 weeks ago
-            web3.toWei(5, "ether"),
-            currentTimestamp - 7 * day,  // a week ago
-            web3.toWei(10, "ether"),
-            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
-            0,
-        ],
+        // individual mas caps
+        // 2 weeks ago           a week ago               closing: 2 weeks later
+        [now - 2 * week,         now - week,              now + 2 * week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
     "CarryPublicTokenCrowdsale (already closed)": (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
@@ -99,16 +88,12 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        [0, currentTimestamp - 31 * day],  // whitelistGrades
+        [0, now - 31 * day],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [
-            currentTimestamp - 31 * day,  // a month ago
-            web3.toWei(5, "ether"),
-            currentTimestamp - 14 * day,  // 2 weeks ago
-            web3.toWei(10, "ether"),
-            currentTimestamp - 7 * day,  // closingTime: a week ago
-            0,
-        ],
+        // individual mas caps
+        // a month ago           2 weeks ago              closing: a week ago
+        [now - 31 * day,         now - 2 * week,          now - week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
 }, ({
     testName,

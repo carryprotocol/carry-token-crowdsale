@@ -107,14 +107,15 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         uint256 _individualMinPurchaseWei,
 
         // Since Solidity currently doesn't allows parameters to take array of
-        // structs, we work around this by taking (timestamp, weis) pairs as
-        // a 1d-array of [timestamp1, weis1, timestamp2, weis2, ...].
-        // It fails if the length is not even but odd.
-        uint256[] _individualMaxCaps
+        // structs, we work around this by taking two arrays for each field
+        // (timestmap and maxWei) separately.  It fails unless two arrays are
+        // of equal length.
+        uint256[] _individualMaxCapTimestamps,
+        uint256[] _individualMaxCapWeis
     ) public CappedCrowdsale(_cap) Crowdsale(_rate, _wallet, _token) {
         require(
-            _individualMaxCaps.length % 2 == 0,
-            "The length of _individualMaxCaps has to be even, not odd."
+            _individualMaxCapTimestamps.length == _individualMaxCapWeis.length,
+            "_individualMaxCap{Timestamps,Weis} do not have equal length."
         );
         if (_whitelistGrades.length < 1) {
             whitelistGrades = [0];
@@ -130,11 +131,12 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
             whitelistGrades = _whitelistGrades;
         }
         individualMinPurchaseWei = _individualMinPurchaseWei;
-        for (uint256 i = 0; i < _individualMaxCaps.length; i += 2) {
+        for (uint i = 0; i < _individualMaxCapTimestamps.length; i++) {
+            uint256 timestamp = _individualMaxCapTimestamps[i];
             individualMaxCaps.push(
                 IndividualMaxCap(
-                    _individualMaxCaps[i],
-                    _individualMaxCaps[i + 1]
+                    timestamp,
+                    _individualMaxCapWeis[i]
                 )
             );
         }

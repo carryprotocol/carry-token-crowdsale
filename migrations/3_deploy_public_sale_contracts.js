@@ -83,6 +83,7 @@ module.exports = (deployer, network, accounts) => {
         return CarryToken.deployed();
     }).then((_carryToken) => {
         carryToken = _carryToken;
+        const caps = Object.entries(publicSale.individualMaxCaps);
         return deployer.deploy(
             CarryPublicTokenCrowdsale,
             publicSale.wallet,
@@ -91,9 +92,8 @@ module.exports = (deployer, network, accounts) => {
             publicSale.cap,
             publicSale.closingTime,
             publicSale.individualMinPurchaseWei,
-            Object.entries(publicSale.individualMaxCaps).reduce(
-                (a, b) => a.concat(b)
-            )
+            caps.map(pair => pair[0]),
+            caps.map(pair => pair[1]),
         );
     }).then(c => {
         return new Promise(resolve => setTimeout(() => resolve(c), delay));
