@@ -96,6 +96,11 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
     // false at first, and then become true at some point.
     bool public withdrawable;
 
+    // The fixed due date (timestamp) of token delivery.  Even if withdrawable
+    // if not set to true, since the due date purchasers become able to withdraw
+    // tokens.  See also whenWithdrawable modifier below.
+    uint256 public tokenDeliveryDue;
+
     mapping(address => uint256) public refundedDeposits;
 
     constructor(
@@ -103,19 +108,22 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         CarryToken _token,
         uint256 _rate,
         uint256 _cap,
+        uint256 _tokenDeliveryDue,
         uint256[] _whitelistGrades,
         uint256 _individualMinPurchaseWei,
 
         // Since Solidity currently doesn't allows parameters to take array of
-        // structs, we work around this by taking (timestamp, weis) pairs as
-        // a 1d-array of [timestamp1, weis1, timestamp2, weis2, ...].
-        // It fails if the length is not even but odd.
-        uint256[] _individualMaxCaps
+        // structs, we work around this by taking two arrays for each field
+        // (timestmap and maxWei) separately.  It fails unless two arrays are
+        // of equal length.
+        uint256[] _individualMaxCapTimestamps,
+        uint256[] _individualMaxCapWeis
     ) public CappedCrowdsale(_cap) Crowdsale(_rate, _wallet, _token) {
         require(
-            _individualMaxCaps.length % 2 == 0,
-            "The length of _individualMaxCaps has to be even, not odd."
+            _individualMaxCapTimestamps.length == _individualMaxCapWeis.length,
+            "_individualMaxCap{Timestamps,Weis} do not have equal length."
         );
+        tokenDeliveryDue = _tokenDeliveryDue;
         if (_whitelistGrades.length < 1) {
             whitelistGrades = [0];
         } else {
@@ -130,11 +138,16 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
             whitelistGrades = _whitelistGrades;
         }
         individualMinPurchaseWei = _individualMinPurchaseWei;
-        for (uint256 i = 0; i < _individualMaxCaps.length; i += 2) {
+        for (uint i = 0; i < _individualMaxCapTimestamps.length; i++) {
+            uint256 timestamp = _individualMaxCapTimestamps[i];
+            require(
+                i < 1 || timestamp > _individualMaxCapTimestamps[i - 1],
+                "_individualMaxCapTimestamps have to be in ascending order and no duplications."
+            );
             individualMaxCaps.push(
                 IndividualMaxCap(
-                    _individualMaxCaps[i],
-                    _individualMaxCaps[i + 1]
+                    timestamp,
+                    _individualMaxCapWeis[i]
                 )
             );
         }
@@ -174,14 +187,23 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         );
 
         // See also the comment on the individualMaxCaps above.
-        uint256 latestTimestamp = 0;
         uint256 individualMaxWei = 0;
-        for (uint256 i = 0; i < individualMaxCaps.length; i++) {
+        for (uint i = 0; i < individualMaxCaps.length; i++) {
+            uint256 capTimestamp = individualMaxCaps[i].timestamp;
             // solium-disable-next-line security/no-block-members
-            if (individualMaxCaps[i].timestamp <= block.timestamp &&
-                individualMaxCaps[i].timestamp > latestTimestamp) {
-                latestTimestamp = individualMaxCaps[i].timestamp;
+            if (capTimestamp <= block.timestamp) {
                 individualMaxWei = individualMaxCaps[i].maxWei;
+            } else {
+                // Optimize gas consumption by trimming timestamps no more used.
+                if (i > 1) {
+                    uint offset = i - 1;
+                    uint trimmedLength = individualMaxCaps.length - offset;
+                    for (uint256 j = 0; j < trimmedLength; j++) {
+                        individualMaxCaps[j] = individualMaxCaps[offset + j];
+                    }
+                    individualMaxCaps.length = trimmedLength;
+                }
+                break;
             }
         }
         require(
@@ -224,8 +246,16 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         withdrawable = _withdrawable;
     }
 
-    function withdrawTokens() public {
-        require(withdrawable, "Currently tokens cannot be withdrawn.");
+    modifier whenWithdrawable() {
+        require(
+            // solium-disable-next-line security/no-block-members
+            withdrawable || block.timestamp >= tokenDeliveryDue,
+            "Currently tokens cannot be withdrawn."
+        );
+        _;
+    }
+
+    function withdrawTokens() public whenWithdrawable {
         uint256 amount = balances[msg.sender];
         require(amount > 0, "No balance to withdraw.");
         balances[msg.sender] = 0;

@@ -20,10 +20,11 @@ const {
     multipleContracts,
 } = require("./utils");
 
-const currentTimestamp = +new Date() / 1000 >> 0;
+const now = +new Date() / 1000 >> 0;
 const minute = 60;
 const hour = 60 * minute;
 const day = 24 * hour;
+const week = 7 * day;
 
 multipleContracts({
     "CarryPublicTokenCrowdsale (not opened yet)": (fundWallet, token) => [
@@ -34,16 +35,13 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        [0, currentTimestamp + 14 * day],  // whitelistGrades
+        now + 180 * day,  // tokenDeliveryDue
+        [0, now + 2 * week],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp + 14 * day,  // 2 weeks later
-            web3.toWei(5, "ether"),
-            currentTimestamp + 21 * day,  // 3 weeks later
-            web3.toWei(10, "ether"),
-            currentTimestamp + 31 * day,  // closingTime: a month later
-            0,
-        ],
+        // individual mas caps
+        // 2 weeks later         3 weeks later            closing: a month later
+        [now + 2 * week,         now + 3 * week,          now + 31 * day],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 1)": (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
@@ -53,20 +51,17 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        now + 180 * day,  // tokenDeliveryDue
         [  // whitelistGrades
             0,
-            currentTimestamp - 7 * day,
-            currentTimestamp + 7 * day,
+            now - week,
+            now + week,
         ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp - 7 * day,  // a week ago
-            web3.toWei(5, "ether"),
-            currentTimestamp + 7 * day,  // a week later
-            web3.toWei(10, "ether"),
-            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
-            0,
-        ],
+        // individual mas caps
+        // a week ago            a week later             closing: 2 weeks later
+        [now - week,             now + week,              now + 2 * week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
     "CarryPublicTokenCrowdsale (opened; phase 2)": (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
@@ -76,22 +71,20 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
+        now + 180 * day,  // tokenDeliveryDue
         [  // whitelistGrades
             0,
-            currentTimestamp - 14 * day,
-            currentTimestamp - 7 * day,
+            now - 2 * week,
+            now - week,
         ],
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [  // individualMaxCaps
-            currentTimestamp - 14 * day,  // 2 weeks ago
-            web3.toWei(5, "ether"),
-            currentTimestamp - 7 * day,  // a week ago
-            web3.toWei(10, "ether"),
-            currentTimestamp + 14 * day,  // closingTime: 2 weeks later
-            0,
-        ],
+        // individual mas caps
+        // 2 weeks ago           a week ago               closing: 2 weeks later
+        [now - 2 * week,         now - week,              now + 2 * week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
-    "CarryPublicTokenCrowdsale (already closed)": (fundWallet, token) => [
+    "CarryPublicTokenCrowdsale (already closed; not withdrawable)":
+    (fundWallet, token) => [
         // Use similar arguments to the publicSale (though not necessarily).
         // See also presale constant on
         // migrations/3_deploy_public_sale_contracts.js file.
@@ -99,16 +92,30 @@ multipleContracts({
         token.address,  // token contract
         65000,  // rate
         web3.toWei(5000410, "finney"),  // cap
-        [0, currentTimestamp - 31 * day],  // whitelistGrades
+        now + 180 * day,  // tokenDeliveryDue
+        [0, now - 31 * day],  // whitelistGrades
         web3.toWei(99, "finney"),  // individualMinPurchaseWei
-        [
-            currentTimestamp - 31 * day,  // a month ago
-            web3.toWei(5, "ether"),
-            currentTimestamp - 14 * day,  // 2 weeks ago
-            web3.toWei(10, "ether"),
-            currentTimestamp - 7 * day,  // closingTime: a week ago
-            0,
-        ],
+        // individual mas caps
+        // a month ago           2 weeks ago              closing: a week ago
+        [now - 31 * day,         now - 2 * week,          now - week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
+    ],
+    "CarryPublicTokenCrowdsale (already closed; delivery due reached)":
+    (fundWallet, token) => [
+        // Use similar arguments to the publicSale (though not necessarily).
+        // See also presale constant on
+        // migrations/3_deploy_public_sale_contracts.js file.
+        fundWallet,  // wallet
+        token.address,  // token contract
+        65000,  // rate
+        web3.toWei(5000410, "finney"),  // cap
+        now - 3 * day,  // tokenDeliveryDue
+        [0, now - 31 * day],  // whitelistGrades
+        web3.toWei(99, "finney"),  // individualMinPurchaseWei
+        // individual mas caps
+        // a month ago           2 weeks ago              closing: a week ago
+        [now - 31 * day,         now - 2 * week,          now - week],
+        [web3.toWei(5, "ether"), web3.toWei(10, "ether"), 0],
     ],
 }, ({
     testName,
@@ -123,6 +130,8 @@ multipleContracts({
     const phase1 = testName.indexOf("(opened; phase 1)") >= 0;
     const phase2 = testName.indexOf("(opened; phase 2)") >= 0;
     const opened = phase1 || phase2;
+    const deliveryDueReached =
+        testName.indexOf("(already closed; delivery due reached)") >= 0;
 
     it("disallows to add to whitelist from other than owner", async () => {
         const contributor = getAccount();
@@ -297,13 +306,15 @@ multipleContracts({
             );
         });
 
-        it("disallows to withdraw tokens by default", async () => {
-            const contributor = await purchaseTokenSuccessfully();
-            assertFail(
-                getFund().withdrawTokens({ from: contributor }),
-                "Withdrawal should be disallowed"
-            );
-        });
+        if (!deliveryDueReached) {
+            it("disallows to withdraw tokens by default", async () => {
+                const contributor = await purchaseTokenSuccessfully();
+                assertFail(
+                    getFund().withdrawTokens({ from: contributor }),
+                    "Withdrawal should be disallowed"
+                );
+            });
+        }
 
         it("can be withdrawable by setWithdrawable()", async () => {
             const contributor = await purchaseTokenSuccessfully();
@@ -317,6 +328,20 @@ multipleContracts({
                 "Tokens should be delivered"
             );
         });
+
+        if (deliveryDueReached) {
+            it("can be withdrwable if delivery due reached", async () => {
+                const contributor = await purchaseTokenSuccessfully();
+                const fund = getFund();
+                const rate = await fund.rate();
+                await fund.withdrawTokens({ from: contributor });
+                assertEq(
+                    rate.mul(individualMaxCapWei),
+                    await getToken().balanceOf(contributor),
+                    "Tokens should be delivered"
+                );
+            });
+        }
     }
 
     it("should not receive ethers if it is paused", async () => {
