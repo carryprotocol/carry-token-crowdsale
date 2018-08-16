@@ -54,7 +54,7 @@ The following command compiles every contract in the repository:
 Test
 ----
 
-The followoing command runs the whole test suite against every contract:
+The following command runs the whole test suite against every contract:
 
     npm test
 
