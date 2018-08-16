@@ -255,11 +255,24 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         _;
     }
 
+    function _deliverTokens(address _beneficiary) internal {
+        uint256 amount = balances[_beneficiary];
+        if (amount > 0) {
+            balances[_beneficiary] = 0;
+            _deliverTokens(_beneficiary, amount);
+        }
+    }
+
     function withdrawTokens() public whenWithdrawable {
-        uint256 amount = balances[msg.sender];
-        require(amount > 0, "No balance to withdraw.");
-        balances[msg.sender] = 0;
-        _deliverTokens(msg.sender, amount);
+        _deliverTokens(msg.sender);
+    }
+
+    function deliverTokens(
+        address[] _beneficiaries
+    ) public onlyOwner whenWithdrawable {
+        for (uint256 i = 0; i < _beneficiaries.length; i++) {
+            _deliverTokens(_beneficiaries[i]);
+        }
     }
 
     event RefundDeposited(
