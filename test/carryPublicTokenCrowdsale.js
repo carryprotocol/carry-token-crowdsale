@@ -314,31 +314,121 @@ multipleContracts({
                     "Withdrawal should be disallowed"
                 );
             });
+
+            it("disallows to deliver tokens by default", async () => {
+                const contributor = await purchaseTokenSuccessfully();
+                assertFail(
+                    getFund().deliverTokens([contributor], { from: fundOwner }),
+                    "Token delivery should be disallowed"
+                );
+            });
         }
 
-        it("can be withdrawable by setWithdrawable()", async () => {
+        it("disallows other than owner to deliver tokens", async () => {
             const contributor = await purchaseTokenSuccessfully();
+            assertFail(
+                getFund().deliverTokens([contributor], { from: contributor }),
+                "Token delivery should be disallowed"
+            );
+        });
+
+        it("can be withdrawable by setWithdrawable()", async () => {
+            const contributor1 = await purchaseTokenSuccessfully();
+            const contributor2 = await purchaseTokenSuccessfully();
+            const contributor3 = await purchaseTokenSuccessfully();
             const fund = getFund();
             const rate = await fund.rate();
             await fund.setWithdrawable(true, { from: fundOwner });
-            await fund.withdrawTokens({ from: contributor });
+
+            const tx1 = await fund.withdrawTokens({ from: contributor1 });
+            const expectedBalance = rate.mul(individualMaxCapWei);
             assertEq(
-                rate.mul(individualMaxCapWei),
-                await getToken().balanceOf(contributor),
+                expectedBalance,
+                await getToken().balanceOf(contributor1),
                 "Tokens should be delivered"
+            );
+            assertEvents(
+                [
+                    {
+                        $event: "TokenDelivered",
+                        beneficiary: contributor1,
+                        tokenAmount: expectedBalance,
+                    },
+                ],
+                tx1
+            );
+
+            const tx2 = await fund.deliverTokens(
+                [contributor2, contributor3],
+                { from: fundOwner }
+            );
+            assertEq(
+                expectedBalance,
+                await getToken().balanceOf(contributor2),
+                "Tokens should be delivered"
+            );
+            assertEq(
+                expectedBalance,
+                await getToken().balanceOf(contributor3),
+                "Tokens should be delivered"
+            );
+            assertEvents(
+                [contributor2, contributor3].map(addr => ({
+                    $event: "TokenDelivered",
+                    beneficiary: addr,
+                    tokenAmount: expectedBalance,
+                })),
+                tx2
             );
         });
 
         if (deliveryDueReached) {
             it("can be withdrwable if delivery due reached", async () => {
-                const contributor = await purchaseTokenSuccessfully();
+                const contributor1 = await purchaseTokenSuccessfully();
+                const contributor2 = await purchaseTokenSuccessfully();
+                const contributor3 = await purchaseTokenSuccessfully();
                 const fund = getFund();
                 const rate = await fund.rate();
-                await fund.withdrawTokens({ from: contributor });
+
+                const tx1 = await fund.withdrawTokens({ from: contributor1 });
+                const expectedBalance = rate.mul(individualMaxCapWei);
                 assertEq(
-                    rate.mul(individualMaxCapWei),
-                    await getToken().balanceOf(contributor),
+                    expectedBalance,
+                    await getToken().balanceOf(contributor1),
                     "Tokens should be delivered"
+                );
+                assertEvents(
+                    [
+                        {
+                            $event: "TokenDelivered",
+                            beneficiary: contributor1,
+                            tokenAmount: expectedBalance,
+                        },
+                    ],
+                    tx1
+                );
+
+                const tx2 = await fund.deliverTokens(
+                    [contributor2, contributor3],
+                    { from: fundOwner }
+                );
+                assertEq(
+                    expectedBalance,
+                    await getToken().balanceOf(contributor2),
+                    "Tokens should be delivered"
+                );
+                assertEq(
+                    expectedBalance,
+                    await getToken().balanceOf(contributor3),
+                    "Tokens should be delivered"
+                );
+                assertEvents(
+                    [contributor2, contributor3].map(addr => ({
+                        $event: "TokenDelivered",
+                        beneficiary: addr,
+                        tokenAmount: expectedBalance,
+                    })),
+                    tx2
                 );
             });
         }

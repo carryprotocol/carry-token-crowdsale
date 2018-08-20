@@ -41,18 +41,15 @@ const publicSale = {
         0,
 
         // Everyone who passed KYC/AML
-        timestamp("2018-08-26T20:00:00+00:00"),
-
-        // KYC/AML, quiz passed & non-target region
-        timestamp("2018-08-27T20:00:00+09:00"),
-
-        // KYC/AML, quiz passed & target region
         timestamp("2018-08-28T20:00:00+09:00"),
+
+        // KYC/AML, quiz passed
+        timestamp("2018-08-26T20:00:00+09:00"),
     ],
 
     // Available time frame & individual caps
     individualMaxCaps: {
-        [timestamp("2018-08-26T20:00:00+09:00")]: web3.toWei(5, "ether"),
+        [timestamp("2018-08-26T20:00:00+09:00")]: web3.toWei(20, "ether"),
         [timestamp("2018-08-28T20:00:00+09:00")]: web3.toWei(10, "ether"),
         [timestamp("2018-09-09T20:00:00+09:00")]: 0,  // closing time
     },
@@ -93,7 +90,8 @@ module.exports = (deployer, network, accounts) => {
             carryToken.address,
             publicSale.rate,
             publicSale.cap,
-            publicSale.closingTime,
+            publicSale.tokenDeliveryDue,
+            publicSale.whitelistGrades,
             publicSale.individualMinPurchaseWei,
             caps.map(pair => pair[0]),
             caps.map(pair => pair[1]),
