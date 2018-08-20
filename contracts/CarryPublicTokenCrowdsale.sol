@@ -255,11 +255,14 @@ contract CarryPublicTokenCrowdsale is CappedCrowdsale, Pausable {
         _;
     }
 
+    event TokenDelivered(address indexed beneficiary, uint256 tokenAmount);
+
     function _deliverTokens(address _beneficiary) internal {
         uint256 amount = balances[_beneficiary];
         if (amount > 0) {
             balances[_beneficiary] = 0;
             _deliverTokens(_beneficiary, amount);
+            emit TokenDelivered(_beneficiary, amount);
         }
     }
 

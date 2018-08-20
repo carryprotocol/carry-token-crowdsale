@@ -340,15 +340,25 @@ multipleContracts({
             const rate = await fund.rate();
             await fund.setWithdrawable(true, { from: fundOwner });
 
-            await fund.withdrawTokens({ from: contributor1 });
+            const tx1 = await fund.withdrawTokens({ from: contributor1 });
             const expectedBalance = rate.mul(individualMaxCapWei);
             assertEq(
                 expectedBalance,
                 await getToken().balanceOf(contributor1),
                 "Tokens should be delivered"
             );
+            assertEvents(
+                [
+                    {
+                        $event: "TokenDelivered",
+                        beneficiary: contributor1,
+                        tokenAmount: expectedBalance,
+                    },
+                ],
+                tx1
+            );
 
-            await fund.deliverTokens(
+            const tx2 = await fund.deliverTokens(
                 [contributor2, contributor3],
                 { from: fundOwner }
             );
@@ -362,6 +372,14 @@ multipleContracts({
                 await getToken().balanceOf(contributor3),
                 "Tokens should be delivered"
             );
+            assertEvents(
+                [contributor2, contributor3].map(addr => ({
+                    $event: "TokenDelivered",
+                    beneficiary: addr,
+                    tokenAmount: expectedBalance,
+                })),
+                tx2
+            );
         });
 
         if (deliveryDueReached) {
@@ -372,15 +390,25 @@ multipleContracts({
                 const fund = getFund();
                 const rate = await fund.rate();
 
-                await fund.withdrawTokens({ from: contributor1 });
+                const tx1 = await fund.withdrawTokens({ from: contributor1 });
                 const expectedBalance = rate.mul(individualMaxCapWei);
                 assertEq(
                     expectedBalance,
                     await getToken().balanceOf(contributor1),
                     "Tokens should be delivered"
                 );
+                assertEvents(
+                    [
+                        {
+                            $event: "TokenDelivered",
+                            beneficiary: contributor1,
+                            tokenAmount: expectedBalance,
+                        },
+                    ],
+                    tx1
+                );
 
-                await fund.deliverTokens(
+                const tx2 = await fund.deliverTokens(
                     [contributor2, contributor3],
                     { from: fundOwner }
                 );
@@ -393,6 +421,14 @@ multipleContracts({
                     expectedBalance,
                     await getToken().balanceOf(contributor3),
                     "Tokens should be delivered"
+                );
+                assertEvents(
+                    [contributor2, contributor3].map(addr => ({
+                        $event: "TokenDelivered",
+                        beneficiary: addr,
+                        tokenAmount: expectedBalance,
+                    })),
+                    tx2
                 );
             });
         }
