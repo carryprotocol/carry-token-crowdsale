@@ -112,8 +112,8 @@ You must be able to find transactions made by your account from
 [Ropsten]: https://ropsten.etherscan.io/
 [Infura]: https://infura.io/
 [Geth]: https://github.com/ethereum/go-ethereum
-[1]: http://faucet.ropsten.be:3001/
-[2]: https://faucet.bitfwd.xyz/
+[1]: https://faucet.ropsten.be/
+[2]: https://faucet.metamask.io/
 [3]: https://github.com/trufflesuite/truffle-migrate/issues/29
 
 
