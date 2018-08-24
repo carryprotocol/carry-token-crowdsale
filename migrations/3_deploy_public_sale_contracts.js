@@ -29,8 +29,8 @@ const publicSale = {
     // their minor units: 18 decimals.
     rate: 65000,
 
-    // Max cap: 5000.41 ETH = 373,781,000 CRE
-    cap: web3.toWei(5000410, "finney"),
+    // Max cap: 5000.00 ETH = 325,000,000 CRE
+    cap: web3.toWei(5000000, "finney"),
 
     // Due date of token delivery
     tokenDeliveryDue: timestamp("2019-01-01T00:00:00+09:00"),
