@@ -33,7 +33,7 @@ const publicSale = {
     cap: web3.toWei(5000000, "finney"),
 
     // Due date of token delivery
-    tokenDeliveryDue: timestamp("2019-01-01T00:00:00+09:00"),
+    tokenDeliveryDue: timestamp("2300-01-01T00:00:00+09:00"),
 
     // Whitelist grades and available time for each grades
     whitelistGrades: [
