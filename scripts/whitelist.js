@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const fs = require("fs");
 const CarryTokenPresale = artifacts.require("CarryTokenPresale");
+const CarryPublicTokenCrowdsale =
+    artifacts.require("CarryPublicTokenCrowdsale");
 
 // Note that this script should be run through Truffle.  This requires
 // the environment variable WHITELIST_FILE which refers to the text file of
@@ -24,23 +26,53 @@ const CarryTokenPresale = artifacts.require("CarryTokenPresale");
 //     MNEMONIC="..." \
 //     npx truffle exec scripts/whitelist.js --network ropsten
 //
+// For the public token sale, GRADE envrironment variable is also necessary:
+//
+//     WHITELIST_FILE="..." \
+//     MNEMONIC="..." \
+//     GRADE=1 \
+//     npx truffle exec scripts/whitelist.js --network ropsten
+//
 // See also Truffle's docs:
 //
 //     https://truffleframework.com/docs/getting_started/scripts
-module.exports = callback => CarryTokenPresale.deployed().then(contract => {
+module.exports = callback => {
     const {
+        CONTRACT: contractAddress = null,
         WHITELIST_FILE: filePath,
         CHUNK: chunk = 260,
         GAS_PRICE_GWEI: gasPriceGwei = "80",
         OFFSET_ADDRESS: offsetAddress = null,
+        GRADE: grade = null,
     } = process.env;
+    if (contractAddress != null &&
+        !contractAddress.match(/^0x[0-9a-f]{40}$/i)) {
+        throw new Error("Invalid CONTRACT address: " + contractAddress);
+    }
     if (!filePath) {
         callback(new Error("Missing environment variable: WHITELIST_FILE"));
         return;
     }
-    if (typeof chunk != "number" && !chunk.match(/^\d+$/)) {
+    if (chunk != null && typeof chunk != "number" && !chunk.match(/^\d+$/)) {
         callback(new Error("CHUNK should be integral"));
         return;
+    }
+    let contractType;
+    if (grade == null) {
+        contractType = CarryTokenPresale;
+        console.info(
+            "Since GRADE is omitted, the contract type is determined to " +
+            "CarryTokenPresale."
+        );
+    } else if (typeof grade != "number" && !grade.match(/^\d+$/)) {
+        callback(new Error("GRADE should be integral"));
+        return;
+    } else {
+        contractType = CarryPublicTokenCrowdsale;
+        console.info(
+            "Since GRADE is present, the contract type is determined to " +
+            "CarryPublicTokenCrowdsale."
+        );
     }
     let delay = 0;
     if ((process.env.DELAY_SECONDS || "").match(/^\d+$/)) {
@@ -62,10 +94,12 @@ module.exports = callback => CarryTokenPresale.deployed().then(contract => {
         }
 
         return updateWhitelist(
-            contract,
+            contractType,
+            contractAddress,
             addresses,
-            chunk,
+            +chunk,
             gasPriceGwei,
+            grade == null ? null : +grade,
             delay,
         ).catch(e => {
             console.error(e);
@@ -74,29 +108,36 @@ module.exports = callback => CarryTokenPresale.deployed().then(contract => {
             callback("Done.");
         });
     });
-});
+};
 
 async function updateWhitelist(
-    contract,
+    contractType,
+    contractAddress,
     addresses,
     chunk,
     gasPriceGwei,
+    grade,
     delay,
 ) {
+    const contract = contractAddress == null
+        ? await contractType.deployed()
+        : await contractType.at(contractAddress);
     for (const address of addresses) {
         if (!address.match(/^0x[0-9a-f]{40}$/i)) {
             throw new Error("Invalid address: " + address);
         }
     }
 
-    const paused = await contract.paused();
+    if (grade == null) {
+        const paused = await contract.paused();
 
-    if (paused) {
-        console.info("The contract is already paused.");
-    } else {
-        await contract.pause();
-        console.info("The contract has just paused.");
-        await sleep(delay);
+        if (paused) {
+            console.info("The contract is already paused.");
+        } else {
+            await contract.pause();
+            console.info("The contract has just paused.");
+            await sleep(delay);
+        }
     }
 
     const addressChunks = chunks(addresses, chunk);
@@ -104,6 +145,7 @@ async function updateWhitelist(
     console.info("The estimated number to make calls: " + remainingChunks);
     console.info("(addresses: " + addresses.length + ", chunk size: " +
                  chunk + ", chunks: " + remainingChunks + ")");
+    const gradeArgs = grade == null ? [] : [grade];
 
     for (const addresses of addressChunks) {
         const gasLimit = 50000 + 30000 * addresses.length;
@@ -112,7 +154,7 @@ async function updateWhitelist(
         console.info("The first address of this chunk: " + addresses[0]);
         console.info("Gas limit: " + gasLimit);
         try {
-            await contract.addAddressesToWhitelist(addresses, {
+            await contract.addAddressesToWhitelist(addresses, ...gradeArgs, {
                 gas: gasLimit,
                 gasPrice: web3.toWei(gasPriceGwei, "gwei"),
             });
@@ -129,10 +171,14 @@ async function updateWhitelist(
                     console.info("Failed due to nonce mismatch; retry...");
                 }
                 try {
-                    await contract.addAddressesToWhitelist(addresses, {
-                        gas: gasLimit,
-                        gasPrice: web3.toWei(gasPriceGwei * multiply, "gwei"),
-                    });
+                    await contract.addAddressesToWhitelist(
+                        addresses,
+                        ...gradeArgs,
+                        {
+                            gas: gasLimit,
+                            gasPrice: web3.toWei(gasPriceGwei * multiply, "gwei"),
+                        }
+                    );
                 } catch (e) {
                     console.error("Errored addresses: ", addresses);
                     console.error(e);
